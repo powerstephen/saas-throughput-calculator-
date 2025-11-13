@@ -6,9 +6,7 @@ import NumberInput from "@/components/NumberInput";
 import ScenarioPanel from "@/components/ScenarioPanel";
 import ResultsPanel from "@/components/ResultsPanel";
 import Tabs, { TabKeyType } from "@/components/Tabs";
-import BenchmarksPanel, {
-  BenchmarksType
-} from "@/components/BenchmarksPanel";
+import MetricInputWithBenchmark from "@/components/MetricInputWithBenchmark";
 import {
   calculateAll,
   MarketingInputs,
@@ -52,23 +50,33 @@ export default function Page() {
     targetArr: 2500000
   });
 
-  // Simple default benchmarks – tweak these as you like
-  const [benchmarks] = useState<BenchmarksType>({
-    mqlRate: 30,
-    sqlRate: 40,
-    oppRate: 40,
-    oppToProposal: 60,
-    proposalToWin: 30,
-    monthlyChurnRate: 2,
-    ltvToCac: 3.0
-  });
-
   const [scenarios, setScenarios] =
     useState<ScenarioAdjustments>({
       convLiftPct: 0,
       churnImprovementPct: 0,
       aspIncreasePct: 0
     });
+
+  // Simple starting benchmarks (you can tweak these)
+  const marketingBenchmarks = {
+    mqlRate: 30,
+    sqlRate: 40,
+    oppRate: 40,
+    blendedCAC: 2500
+  };
+
+  const salesBenchmarks = {
+    oppToProposal: 60,
+    proposalToWin: 30,
+    asp: 12000
+  };
+
+  const csBenchmarks = {
+    monthlyChurnRate: 2,
+    expansionRate: 15,
+    nrr: 115,
+    grossMargin: 75
+  };
 
   const result = useMemo(
     () =>
@@ -90,9 +98,10 @@ export default function Page() {
         </h1>
         <p className="max-w-3xl text-sm text-slate-600">
           Full-funnel view of acquisition, conversion,
-          retention, and profitability. Use the tabs to adjust
-          inputs for marketing, sales, and customer success,
-          then compare against benchmarks and run scenarios.
+          retention, and profitability. Use the tabs to enter
+          actuals for marketing, sales, and customer success,
+          with inline benchmarks to see where you’re ahead or
+          behind.
         </p>
       </header>
 
@@ -104,7 +113,8 @@ export default function Page() {
             <div className="mb-4 flex items-center justify-between gap-2">
               <Tabs active={activeTab} onChange={setActiveTab} />
               <div className="text-[11px] text-slate-500">
-                Enter your actuals by function.
+                Enter your actuals by function and compare to
+                benchmark.
               </div>
             </div>
 
@@ -133,9 +143,8 @@ export default function Page() {
                     })
                   }
                 />
-                <NumberInput
+                <MetricInputWithBenchmark
                   label="Lead → MQL"
-                  suffix="%"
                   value={marketing.mqlRate}
                   onChange={(v) =>
                     setMarketing({
@@ -143,10 +152,11 @@ export default function Page() {
                       mqlRate: v
                     })
                   }
+                  benchmark={marketingBenchmarks.mqlRate}
+                  mode="percent"
                 />
-                <NumberInput
+                <MetricInputWithBenchmark
                   label="MQL → SQL"
-                  suffix="%"
                   value={marketing.sqlRate}
                   onChange={(v) =>
                     setMarketing({
@@ -154,10 +164,11 @@ export default function Page() {
                       sqlRate: v
                     })
                   }
+                  benchmark={marketingBenchmarks.sqlRate}
+                  mode="percent"
                 />
-                <NumberInput
+                <MetricInputWithBenchmark
                   label="SQL → Opportunity"
-                  suffix="%"
                   value={marketing.oppRate}
                   onChange={(v) =>
                     setMarketing({
@@ -165,10 +176,11 @@ export default function Page() {
                       oppRate: v
                     })
                   }
+                  benchmark={marketingBenchmarks.oppRate}
+                  mode="percent"
                 />
-                <NumberInput
+                <MetricInputWithBenchmark
                   label="Blended CAC per new customer"
-                  suffix="€"
                   value={marketing.blendedCAC}
                   onChange={(v) =>
                     setMarketing({
@@ -176,6 +188,8 @@ export default function Page() {
                       blendedCAC: v
                     })
                   }
+                  benchmark={marketingBenchmarks.blendedCAC}
+                  mode="currency"
                 />
               </InputSection>
             )}
@@ -185,9 +199,8 @@ export default function Page() {
                 title="Sales (Pipeline & Conversion)"
                 subtitle="From opportunity to closed-won and ASP."
               >
-                <NumberInput
+                <MetricInputWithBenchmark
                   label="Opp → Proposal"
-                  suffix="%"
                   value={sales.oppToProposal}
                   onChange={(v) =>
                     setSales({
@@ -195,10 +208,11 @@ export default function Page() {
                       oppToProposal: v
                     })
                   }
+                  benchmark={salesBenchmarks.oppToProposal}
+                  mode="percent"
                 />
-                <NumberInput
+                <MetricInputWithBenchmark
                   label="Proposal → Won"
-                  suffix="%"
                   value={sales.proposalToWin}
                   onChange={(v) =>
                     setSales({
@@ -206,10 +220,11 @@ export default function Page() {
                       proposalToWin: v
                     })
                   }
+                  benchmark={salesBenchmarks.proposalToWin}
+                  mode="percent"
                 />
-                <NumberInput
+                <MetricInputWithBenchmark
                   label="Average sale price (ACV)"
-                  suffix="€"
                   value={sales.asp}
                   onChange={(v) =>
                     setSales({
@@ -217,6 +232,8 @@ export default function Page() {
                       asp: v
                     })
                   }
+                  benchmark={salesBenchmarks.asp}
+                  mode="currency"
                 />
                 <NumberInput
                   label="Sales cycle"
@@ -260,9 +277,8 @@ export default function Page() {
                 title="Customer Success (Retention & Expansion)"
                 subtitle="Churn, expansion, and margin profile."
               >
-                <NumberInput
+                <MetricInputWithBenchmark
                   label="Monthly churn rate"
-                  suffix="%"
                   value={cs.monthlyChurnRate}
                   onChange={(v) =>
                     setCs({
@@ -270,11 +286,11 @@ export default function Page() {
                       monthlyChurnRate: v
                     })
                   }
-                  step={0.1}
+                  benchmark={csBenchmarks.monthlyChurnRate}
+                  mode="percent"
                 />
-                <NumberInput
+                <MetricInputWithBenchmark
                   label="Expansion rate (ARR per year)"
-                  suffix="%"
                   value={cs.expansionRate}
                   onChange={(v) =>
                     setCs({
@@ -282,18 +298,20 @@ export default function Page() {
                       expansionRate: v
                     })
                   }
+                  benchmark={csBenchmarks.expansionRate}
+                  mode="percent"
                 />
-                <NumberInput
+                <MetricInputWithBenchmark
                   label="NRR"
-                  suffix="%"
                   value={cs.nrr}
                   onChange={(v) =>
                     setCs({ ...cs, nrr: v })
                   }
+                  benchmark={csBenchmarks.nrr}
+                  mode="percent"
                 />
-                <NumberInput
+                <MetricInputWithBenchmark
                   label="Gross margin"
-                  suffix="%"
                   value={cs.grossMargin}
                   onChange={(v) =>
                     setCs({
@@ -301,49 +319,41 @@ export default function Page() {
                       grossMargin: v
                     })
                   }
+                  benchmark={csBenchmarks.grossMargin}
+                  mode="percent"
                 />
               </InputSection>
             )}
           </section>
 
-          {/* Finance + Benchmarks in a nice row */}
-          <div className="grid gap-4 md:grid-cols-2">
-            <InputSection
-              title="Finance (ARR Targets)"
-              subtitle="Current and target ARR for planning and coverage."
-            >
-              <NumberInput
-                label="Current ARR"
-                suffix="€"
-                value={finance.currentArr}
-                onChange={(v) =>
-                  setFinance({
-                    ...finance,
-                    currentArr: v
-                  })
-                }
-              />
-              <NumberInput
-                label="Target ARR (12 months)"
-                suffix="€"
-                value={finance.targetArr}
-                onChange={(v) =>
-                  setFinance({
-                    ...finance,
-                    targetArr: v
-                  })
-                }
-              />
-            </InputSection>
-
-            <BenchmarksPanel
-              benchmarks={benchmarks}
-              marketing={marketing}
-              sales={sales}
-              cs={cs}
-              result={result}
+          {/* Finance */}
+          <InputSection
+            title="Finance (ARR Targets)"
+            subtitle="Current and target ARR for planning and coverage."
+          >
+            <NumberInput
+              label="Current ARR"
+              suffix="€"
+              value={finance.currentArr}
+              onChange={(v) =>
+                setFinance({
+                  ...finance,
+                  currentArr: v
+                })
+              }
             />
-          </div>
+            <NumberInput
+              label="Target ARR (12 months)"
+              suffix="€"
+              value={finance.targetArr}
+              onChange={(v) =>
+                setFinance({
+                  ...finance,
+                  targetArr: v
+                })
+              }
+            />
+          </InputSection>
 
           <ResultsPanel result={result} />
         </div>
@@ -364,22 +374,14 @@ export default function Page() {
                 sales, and customer success.
               </li>
               <li>
+                Compare each metric against the inline
+                benchmarks to spot the biggest gaps.
+              </li>
+              <li>
                 Set ARR targets, then review throughput, ARR
-                forecast, unit economics, and pipeline coverage.
+                forecast, unit economics, and pipeline coverage
+                in the results panel.
               </li>
               <li>
-                Compare actual performance against the targets
-                panel to see where the biggest gaps are.
-              </li>
-              <li>
-                Use scenario sliders to test changes in
-                conversion, churn, and ASP, then see the impact
-                on ARR and payback.
-              </li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    </main>
-  );
-}
+                Use the scenario sliders to test changes in
+                conv
