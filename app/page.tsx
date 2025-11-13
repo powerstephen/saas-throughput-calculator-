@@ -57,7 +57,6 @@ export default function Page() {
       aspIncreasePct: 0
     });
 
-  // Simple starting benchmarks (you can tweak these)
   const marketingBenchmarks = {
     mqlRate: 30,
     sqlRate: 40,
@@ -92,28 +91,31 @@ export default function Page() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-8 space-y-2">
+      <header className="mb-6 space-y-2">
         <h1 className="text-xl font-semibold text-slate-900">
           SaaS Revenue Throughput & Scenario Calculator
         </h1>
         <p className="max-w-3xl text-sm text-slate-600">
           Full-funnel view of acquisition, conversion,
-          retention, and profitability. Use the tabs to enter
-          actuals for marketing, sales, and customer success,
-          with inline benchmarks to see where you’re ahead or
-          behind.
+          retention, and profitability. Review the output, then
+          adjust inputs by function and test scenarios.
         </p>
       </header>
 
+      {/* Full-funnel output at the top */}
+      <div className="mb-6">
+        <ResultsPanel result={result} />
+      </div>
+
+      {/* Inputs + scenarios below */}
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-        {/* LEFT COLUMN */}
+        {/* LEFT COLUMN: Tabs + Inputs + Finance */}
         <div className="space-y-4">
-          {/* Tabs + input panel */}
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
             <div className="mb-4 flex items-center justify-between gap-2">
               <Tabs active={activeTab} onChange={setActiveTab} />
               <div className="text-[11px] text-slate-500">
-                Enter your actuals by function and compare to
+                Enter actuals for each function and compare to
                 benchmark.
               </div>
             </div>
@@ -326,7 +328,6 @@ export default function Page() {
             )}
           </section>
 
-          {/* Finance */}
           <InputSection
             title="Finance (ARR Targets)"
             subtitle="Current and target ARR for planning and coverage."
@@ -354,41 +355,14 @@ export default function Page() {
               }
             />
           </InputSection>
-
-          <ResultsPanel result={result} />
         </div>
 
-        {/* RIGHT COLUMN */}
+        {/* RIGHT COLUMN: Scenario panel */}
         <div className="space-y-4">
           <ScenarioPanel
             scenarios={scenarios}
             onChange={setScenarios}
           />
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft text-xs text-slate-600">
-            <h2 className="text-sm font-semibold text-slate-900">
-              How to use this model
-            </h2>
-            <ol className="mt-2 list-decimal space-y-1 pl-4">
-              <li>
-                Use the tabs to enter actuals for marketing,
-                sales, and customer success.
-              </li>
-              <li>
-                Compare each metric against the inline
-                benchmarks to spot the biggest gaps.
-              </li>
-              <li>
-                Set ARR targets, then review throughput, ARR
-                forecast, unit economics, and pipeline coverage
-                in the results panel.
-              </li>
-              <li>
-                Use the scenario sliders to test changes in
-                conversion, churn, and ASP, and see the impact
-                on ARR and payback.
-              </li>
-            </ol>
-          </div>
         </div>
       </div>
     </main>
