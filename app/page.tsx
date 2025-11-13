@@ -384,4 +384,13 @@ export default function Page() {
               </li>
               <li>
                 Use the scenario sliders to test changes in
-                conv
+                conversion, churn, and ASP, and see the impact
+                on ARR and payback.
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
