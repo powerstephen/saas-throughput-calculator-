@@ -34,68 +34,69 @@ export default function ResultsPanel({ result }: Props) {
     coverageTone = "critical";
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-      <header className="mb-3 flex items-center justify-between gap-2">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-900">
-            Full-Funnel Output
-          </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            From traffic to ARR, including churn, expansion,
-            and pipeline coverage.
-          </p>
-        </div>
-      </header>
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
+      {/* Dark header strip */}
+      <div className="border-b border-slate-800 bg-slate-900 px-4 py-3 text-slate-50">
+        <h2 className="text-sm font-semibold">
+          Full-Funnel Output
+        </h2>
+        <p className="mt-1 text-[11px] text-slate-300">
+          From traffic to ARR, including churn, expansion,
+          efficiency, and pipeline coverage.
+        </p>
+      </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-          <h3 className="mb-2 text-xs font-semibold text-slate-700">
+      <div className="grid gap-4 bg-slate-50/60 p-4 lg:grid-cols-2">
+        {/* Funnel */}
+        <div className="rounded-xl border border-slate-100 bg-white p-3">
+          <h3 className="mb-2 text-xs font-semibold text-slate-800">
             Funnel Throughput
           </h3>
           <dl className="grid grid-cols-2 gap-2 text-xs">
             <div>
               <dt className="text-slate-500">MQLs</dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-slate-900">
                 {funnel.mqls.toFixed(0)}
               </dd>
             </div>
             <div>
               <dt className="text-slate-500">SQLs</dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-slate-900">
                 {funnel.sqls.toFixed(0)}
               </dd>
             </div>
             <div>
               <dt className="text-slate-500">Opportunities</dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-slate-900">
                 {funnel.opportunities.toFixed(0)}
               </dd>
             </div>
             <div>
               <dt className="text-slate-500">Proposals</dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-slate-900">
                 {funnel.proposals.toFixed(0)}
               </dd>
             </div>
             <div>
               <dt className="text-slate-500">
-                Wins (New Customers)
+                Wins (New customers)
               </dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-slate-900">
                 {funnel.wins.toFixed(0)}
               </dd>
             </div>
             <div>
               <dt className="text-slate-500">New ARR</dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-emerald-700">
                 {formatCurrency(funnel.newArr)}
               </dd>
             </div>
           </dl>
         </div>
 
-        <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-          <h3 className="mb-2 text-xs font-semibold text-slate-700">
+        {/* ARR forecast */}
+        <div className="rounded-xl border border-slate-100 bg-white p-3">
+          <h3 className="mb-2 text-xs font-semibold text-slate-800">
             ARR Forecast
           </h3>
           <dl className="grid grid-cols-2 gap-2 text-xs">
@@ -103,7 +104,7 @@ export default function ResultsPanel({ result }: Props) {
               <dt className="text-slate-500">
                 Projected ARR (3m)
               </dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-slate-900">
                 {formatCurrency(forecast.projectedArr3m)}
               </dd>
             </div>
@@ -111,7 +112,7 @@ export default function ResultsPanel({ result }: Props) {
               <dt className="text-slate-500">
                 Projected ARR (6m)
               </dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-slate-900">
                 {formatCurrency(forecast.projectedArr6m)}
               </dd>
             </div>
@@ -119,7 +120,7 @@ export default function ResultsPanel({ result }: Props) {
               <dt className="text-slate-500">
                 Projected ARR (12m)
               </dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-slate-900">
                 {formatCurrency(forecast.projectedArr12m)}
               </dd>
             </div>
@@ -142,16 +143,17 @@ export default function ResultsPanel({ result }: Props) {
           </dl>
         </div>
 
-        <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-          <h3 className="mb-2 text-xs font-semibold text-slate-700">
+        {/* Efficiency */}
+        <div className="rounded-xl border border-slate-100 bg-white p-3">
+          <h3 className="mb-2 text-xs font-semibold text-slate-800">
             Efficiency Metrics
           </h3>
           <dl className="grid grid-cols-2 gap-2 text-xs">
             <div>
               <dt className="text-slate-500">
-                CAC Payback
+                CAC payback
               </dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-slate-900">
                 {efficiency.cacPaybackMonths
                   ? `${efficiency.cacPaybackMonths.toFixed(
                       1
@@ -161,9 +163,9 @@ export default function ResultsPanel({ result }: Props) {
             </div>
             <div>
               <dt className="text-slate-500">
-                LTV / Customer
+                LTV / customer
               </dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-slate-900">
                 {efficiency.ltv
                   ? formatCurrency(efficiency.ltv)
                   : "-"}
@@ -173,7 +175,7 @@ export default function ResultsPanel({ result }: Props) {
               <dt className="text-slate-500">
                 LTV / CAC
               </dt>
-              <dd className="font-semibold">
+              <dd className="font-semibold text-slate-900">
                 {efficiency.ltvToCac
                   ? efficiency.ltvToCac.toFixed(1)
                   : "-"}
@@ -181,9 +183,9 @@ export default function ResultsPanel({ result }: Props) {
             </div>
             <div>
               <dt className="text-slate-500">
-                Pipeline Coverage
+                Pipeline coverage
               </dt>
-              <dd className="flex items-center gap-2 font-semibold">
+              <dd className="flex items-center gap-2 font-semibold text-slate-900">
                 {efficiency.pipelineCoverageActual !== null
                   ? formatPct(efficiency.pipelineCoverageActual)
                   : "-"}
@@ -201,8 +203,9 @@ export default function ResultsPanel({ result }: Props) {
           </dl>
         </div>
 
-        <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-          <h3 className="mb-2 text-xs font-semibold text-slate-700">
+        {/* Recommendations */}
+        <div className="rounded-xl border border-slate-100 bg-white p-3">
+          <h3 className="mb-2 text-xs font-semibold text-slate-800">
             Key Recommendations
           </h3>
           <ul className="space-y-2 text-xs">
@@ -217,10 +220,10 @@ export default function ResultsPanel({ result }: Props) {
               return (
                 <li
                   key={idx}
-                  className="rounded-lg border border-slate-100 bg-white p-2"
+                  className="rounded-lg border border-slate-100 bg-slate-50/80 p-2"
                 >
                   <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-semibold text-slate-700">
+                    <span className="text-[11px] font-semibold text-slate-800">
                       {rec.area}
                     </span>
                     <Badge tone={tone as any}>
@@ -231,7 +234,7 @@ export default function ResultsPanel({ result }: Props) {
                         : "Info"}
                     </Badge>
                   </div>
-                  <p className="text-[11px] text-slate-600">
+                  <p className="text-[11px] text-slate-700">
                     {rec.message}
                   </p>
                 </li>
