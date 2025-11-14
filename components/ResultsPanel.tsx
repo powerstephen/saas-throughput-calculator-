@@ -3,14 +3,13 @@ import Badge from "./Badge";
 
 type Props = {
   result: CalculatorResult;
+  targetArr: number;
 };
 
 function formatCurrency(value: number): string {
   if (!Number.isFinite(value)) return "-";
-  if (value >= 1_000_000)
-    return `€${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000)
-    return `€${(value / 1_000).toFixed(1)}k`;
+  if (value >= 1_000_000) return `€${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `€${(value / 1_000).toFixed(1)}k`;
   return `€${value.toFixed(0)}`;
 }
 
@@ -19,57 +18,38 @@ function formatPct(value: number | null): string {
   return `${(value * 100).toFixed(0)}%`;
 }
 
-export default function ResultsPanel({ result }: Props) {
-  const { funnel, forecast, efficiency, recommendations } =
-    result;
+export default function ResultsPanel({ result, targetArr }: Props) {
+  const { funnel, forecast, efficiency, recommendations } = result;
 
-  let coverageTone: "neutral" | "success" | "warning" | "critical" =
-    "neutral";
+  // Net new ARR / year = new + expansion - churn
+  const netNewArrYear =
+    funnel.newArr + forecast.expansionArrYear - forecast.churnedArrYear;
 
-  if (efficiency.pipelineCoverageStatus === "strong")
-    coverageTone = "success";
-  else if (efficiency.pipelineCoverageStatus === "ok")
-    coverageTone = "warning";
-  else if (efficiency.pipelineCoverageStatus === "under")
-    coverageTone = "critical";
+  // Gap to target based on 12-month forecast vs ARR target
+  const arrGap = forecast.projectedArr12m - targetArr;
+
+  let coverageTone: "neutral" | "success" | "warning" | "critical" = "neutral";
+
+  if (efficiency.pipelineCoverageStatus === "strong") coverageTone = "success";
+  else if (efficiency.pipelineCoverageStatus === "ok") coverageTone = "warning";
+  else if (efficiency.pipelineCoverageStatus === "under") coverageTone = "critical";
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-soft">
+    <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-soft">
       {/* ROW 1: Funnel throughput – hero row */}
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Funnel Throughput
         </h2>
-        <span className="text-[11px] text-slate-500">
-          From lead to new ARR
-        </span>
+        <span className="text-[11px] text-slate-500">From lead to new ARR</span>
       </div>
-      <div className="mb-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <MetricTile
-          label="MQLs"
-          value={funnel.mqls.toFixed(0)}
-        />
-        <MetricTile
-          label="SQLs"
-          value={funnel.sqls.toFixed(0)}
-        />
-        <MetricTile
-          label="Opportunities"
-          value={funnel.opportunities.toFixed(0)}
-        />
-        <MetricTile
-          label="Proposals"
-          value={funnel.proposals.toFixed(0)}
-        />
-        <MetricTile
-          label="Wins"
-          value={funnel.wins.toFixed(0)}
-        />
-        <MetricTile
-          label="New ARR"
-          value={formatCurrency(funnel.newArr)}
-          accent="green"
-        />
+      <div className="mb-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <MetricTile label="MQLs" value={funnel.mqls.toFixed(0)} />
+        <MetricTile label="SQLs" value={funnel.sqls.toFixed(0)} />
+        <MetricTile label="Opportunities" value={funnel.opportunities.toFixed(0)} />
+        <MetricTile label="Proposals" value={funnel.proposals.toFixed(0)} />
+        <MetricTile label="Wins" value={funnel.wins.toFixed(0)} />
+        <MetricTile label="New ARR" value={formatCurrency(funnel.newArr)} accent="green" />
       </div>
 
       {/* ROW 2: ARR forecast */}
@@ -77,11 +57,9 @@ export default function ResultsPanel({ result }: Props) {
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           ARR Forecast (Current Run Rate)
         </h2>
-        <span className="text-[11px] text-slate-500">
-          Includes churn and expansion
-        </span>
+        <span className="text-[11px] text-slate-500">Includes churn and expansion</span>
       </div>
-      <div className="mb-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="mb-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <MetricTile
           label="ARR in 3 months"
           value={formatCurrency(forecast.projectedArr3m)}
@@ -105,6 +83,11 @@ export default function ResultsPanel({ result }: Props) {
           value={formatCurrency(forecast.expansionArrYear)}
           accent="green"
         />
+        <MetricTile
+          label="Net new ARR / year"
+          value={formatCurrency(netNewArrYear)}
+          accent={netNewArrYear >= 0 ? "green" : "red"}
+        />
       </div>
 
       {/* ROW 3: Efficiency / risk */}
@@ -113,35 +96,25 @@ export default function ResultsPanel({ result }: Props) {
           Efficiency & Risk
         </h2>
         <span className="text-[11px] text-slate-500">
-          Payback, unit economics, pipeline coverage
+          Payback, unit economics, pipeline coverage & target gap
         </span>
       </div>
-      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <MetricTile
           label="CAC payback"
           value={
             efficiency.cacPaybackMonths
-              ? `${efficiency.cacPaybackMonths.toFixed(
-                  1
-                )} months`
+              ? `${efficiency.cacPaybackMonths.toFixed(1)} months`
               : "-"
           }
         />
         <MetricTile
           label="LTV / customer"
-          value={
-            efficiency.ltv
-              ? formatCurrency(efficiency.ltv)
-              : "-"
-          }
+          value={efficiency.ltv ? formatCurrency(efficiency.ltv) : "-"}
         />
         <MetricTile
           label="LTV / CAC"
-          value={
-            efficiency.ltvToCac
-              ? efficiency.ltvToCac.toFixed(1)
-              : "-"
-          }
+          value={efficiency.ltvToCac ? efficiency.ltvToCac.toFixed(1) : "-"}
         />
         <MetricTile
           label="Pipeline coverage"
@@ -160,6 +133,11 @@ export default function ResultsPanel({ result }: Props) {
             </Badge>
           }
         />
+        <MetricTile
+          label="Gap to ARR target (12m)"
+          value={formatCurrency(arrGap)}
+          accent={arrGap >= 0 ? "green" : "red"}
+        />
       </div>
 
       {/* ROW 4: Recommendations */}
@@ -168,9 +146,6 @@ export default function ResultsPanel({ result }: Props) {
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Recommendations
           </h2>
-          <span className="text-[11px] text-slate-500">
-            Where to focus next
-          </span>
         </div>
         <div className="grid gap-2 lg:grid-cols-2">
           {recommendations.map((rec, idx) => {
@@ -184,7 +159,7 @@ export default function ResultsPanel({ result }: Props) {
             return (
               <div
                 key={idx}
-                className="flex flex-col gap-1 rounded-xl border border-slate-100 bg-white p-2.5"
+                className="flex flex-col gap-1 rounded-xl border border-slate-100 bg-white p-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] font-semibold text-slate-800">
@@ -198,9 +173,7 @@ export default function ResultsPanel({ result }: Props) {
                       : "Info"}
                   </Badge>
                 </div>
-                <p className="text-[11px] text-slate-700">
-                  {rec.message}
-                </p>
+                <p className="text-[11px] text-slate-700">{rec.message}</p>
               </div>
             );
           })}
@@ -210,9 +183,6 @@ export default function ResultsPanel({ result }: Props) {
   );
 }
 
-/**
- * Small reusable tile component for the dashboard metrics
- */
 type MetricTileProps = {
   label: string;
   value: string;
@@ -220,19 +190,14 @@ type MetricTileProps = {
   rightBadge?: React.ReactNode;
 };
 
-function MetricTile({
-  label,
-  value,
-  accent,
-  rightBadge
-}: MetricTileProps) {
+function MetricTile({ label, value, accent, rightBadge }: MetricTileProps) {
   const accentClass =
     accent === "green"
-      ? "border-emerald-100 bg-emerald-50/60"
+      ? "border-emerald-100 bg-emerald-50/70"
       : accent === "red"
-      ? "border-rose-100 bg-rose-50/60"
+      ? "border-rose-100 bg-rose-50/70"
       : accent === "blue"
-      ? "border-sky-100 bg-sky-50/60"
+      ? "border-sky-100 bg-sky-50/70"
       : "border-slate-100 bg-white";
 
   const valueColour =
@@ -246,17 +211,13 @@ function MetricTile({
 
   return (
     <div
-      className={`flex flex-col justify-between rounded-xl border px-3 py-2 ${accentClass}`}
+      className={`flex flex-col justify-between rounded-xl border px-3 py-2.5 ${accentClass}`}
     >
       <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="text-[11px] font-medium text-slate-600">
-          {label}
-        </span>
+        <span className="text-xs font-medium text-slate-600">{label}</span>
         {rightBadge}
       </div>
-      <div
-        className={`text-sm font-semibold leading-tight ${valueColour}`}
-      >
+      <div className={`text-base font-semibold leading-tight ${valueColour}`}>
         {value}
       </div>
     </div>
