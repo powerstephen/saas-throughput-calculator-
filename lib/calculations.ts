@@ -1,290 +1,93 @@
+// lib/calculations.ts
+
 export type MarketingInputs = {
-  traffic: number;
-  leads: number;
-  mqlRate: number; // % from leads -> MQL
-  sqlRate: number; // % from MQL -> SQL
-  oppRate: number; // % from SQL -> Opp
-  blendedCAC: number; // per new customer
+  traffic: number;        // monthly sessions
+  leads: number;          // leads per month
+  mqlRate: number;        // % lead -> MQL
+  sqlRate: number;        // % MQL -> SQL
+  oppRate: number;        // % SQL -> Opportunity
+  blendedCAC: number;     // € per new customer
 };
 
 export type SalesInputs = {
-  oppToProposal: number; // %
-  proposalToWin: number; // %
-  asp: number; // average sale price (ACV)
+  oppToProposal: number;      // % Opp -> Proposal
+  proposalToWin: number;      // % Proposal -> Won
+  asp: number;                // € ACV per new customer (annual)
   salesCycleDays: number;
-  pipelineCoverageTarget: number; // multiplier e.g. 3x, 4x
-  openPipelineValue: number; // current open pipeline value
+  pipelineCoverageTarget: number; // e.g. 3x
+  openPipelineValue: number;      // € value of open opps
 };
 
 export type CsInputs = {
-  monthlyChurnRate: number; // %
-  expansionRate: number; // % of ARR per year
-  nrr: number; // %
-  grossMargin: number; // %
+  monthlyChurnRate: number;  // % per month
+  expansionRate: number;     // % of starting ARR per year
+  nrr: number;               // % (e.g. 115)
+  grossMargin: number;       // % (e.g. 75)
 };
 
 export type FinanceInputs = {
-  currentArr: number;
-  targetArr: number;
+  currentArr: number;        // € annual
+  targetArr: number;         // € annual (12m target)
 };
 
 export type ScenarioAdjustments = {
-  convLiftPct: number; // global conversion uplift %
-  churnImprovementPct: number; // reduction in churn %
-  aspIncreasePct: number; // increase in ASP %
+  convLiftPct: number;         // % lift across funnel
+  churnImprovementPct: number; // % reduction in churn rate
+  aspIncreasePct: number;      // % increase in ASP
 };
 
-export type FunnelOutputs = {
+export type FunnelResult = {
   mqls: number;
   sqls: number;
   opportunities: number;
   proposals: number;
-  wins: number;
-  newArr: number;
+  wins: number;              // wins per month
+  newArrAnnual: number;      // € new ARR (annualised)
 };
 
-export type ForecastOutputs = {
+export type ForecastResult = {
   projectedArr3m: number;
   projectedArr6m: number;
   projectedArr12m: number;
-  churnedArrYear: number;
-  expansionArrYear: number;
+  churnedArrYear: number;       // approx, from starting ARR
+  expansionArrYear: number;     // based on starting ARR
+  monthlyNewArr: number;        // € new ARR added per month
+  monthlyNetNewArr: number;     // € net new ARR per month (approx)
 };
 
-export type EfficiencyOutputs = {
+export type EfficiencyResult = {
   cacPaybackMonths: number | null;
   ltv: number | null;
   ltvToCac: number | null;
-  pipelineCoverageActual: number | null;
-  pipelineCoverageStatus: "under" | "ok" | "strong";
+  pipelineCoverageActual: number | null; // 1.0 = on target
+  pipelineCoverageStatus: "strong" | "ok" | "under";
 };
 
 export type Recommendation = {
   area: string;
-  severity: "info" | "warning" | "critical";
+  severity: "critical" | "warning" | "neutral";
   message: string;
 };
 
 export type CalculatorResult = {
-  funnel: FunnelOutputs;
-  forecast: ForecastOutputs;
-  efficiency: EfficiencyOutputs;
+  funnel: FunnelResult;
+  forecast: ForecastResult;
+  efficiency: EfficiencyResult;
   recommendations: Recommendation[];
 };
 
-const pctToRatio = (pct: number) => pct / 100;
+// ---------- helpers ----------
 
-export function calculateFunnel(
-  marketing: MarketingInputs,
-  sales: SalesInputs,
-  finance: FinanceInputs,
-  scenarios: ScenarioAdjustments
-): FunnelOutputs {
-  const convLift = 1 + scenarios.convLiftPct / 100;
-  const aspLift = 1 + scenarios.aspIncreasePct / 100;
-
-  const mqlRate = pctToRatio(marketing.mqlRate) * convLift;
-  const sqlRate = pctToRatio(marketing.sqlRate) * convLift;
-  const oppRate = pctToRatio(marketing.oppRate) * convLift;
-
-  const oppToProposal = pctToRatio(sales.oppToProposal) * convLift;
-  const proposalToWin = pctToRatio(sales.proposalToWin) * convLift;
-
-  const mqls = marketing.leads * mqlRate;
-  const sqls = mqls * sqlRate;
-  const opportunities = sqls * oppRate;
-  const proposals = opportunities * oppToProposal;
-  const wins = proposals * proposalToWin;
-
-  const newArr = wins * sales.asp * aspLift;
-
-  return {
-    mqls,
-    sqls,
-    opportunities,
-    proposals,
-    wins,
-    newArr
-  };
+function pctToDecimal(p: number): number {
+  return isFinite(p) ? p / 100 : 0;
 }
 
-export function calculateForecast(
-  finance: FinanceInputs,
-  cs: CsInputs,
-  funnel: FunnelOutputs
-): ForecastOutputs {
-  const monthlyChurn = pctToRatio(cs.monthlyChurnRate);
-  const yearlyChurnApprox = 1 - Math.pow(1 - monthlyChurn, 12);
-  const churnedArrYear = finance.currentArr * yearlyChurnApprox;
-
-  const expansionArrYear = finance.currentArr * pctToRatio(cs.expansionRate);
-
-  const netNewArrYear = funnel.newArr + expansionArrYear - churnedArrYear;
-
-  const monthlyNetNewArr = netNewArrYear / 12;
-
-  const projectedArr3m = finance.currentArr + monthlyNetNewArr * 3;
-  const projectedArr6m = finance.currentArr + monthlyNetNewArr * 6;
-  const projectedArr12m = finance.currentArr + netNewArrYear;
-
-  return {
-    projectedArr3m,
-    projectedArr6m,
-    projectedArr12m,
-    churnedArrYear,
-    expansionArrYear
-  };
+function clampPercent(p: number): number {
+  if (!isFinite(p)) return 0;
+  return Math.min(Math.max(p, 0), 100);
 }
 
-export function calculateEfficiency(
-  marketing: MarketingInputs,
-  cs: CsInputs,
-  finance: FinanceInputs,
-  funnel: FunnelOutputs,
-  sales: SalesInputs
-): EfficiencyOutputs {
-  let cacPaybackMonths: number | null = null;
-  let ltv: number | null = null;
-  let ltvToCac: number | null = null;
-
-  const grossMarginRatio = pctToRatio(cs.grossMargin);
-
-  if (marketing.blendedCAC > 0 && funnel.newArr > 0) {
-    const revenuePerCustomer =
-      funnel.newArr / Math.max(funnel.wins, 1);
-
-    const monthlyRevenuePerCustomer = revenuePerCustomer / 12;
-    const monthlyGrossProfitPerCustomer =
-      monthlyRevenuePerCustomer * grossMarginRatio;
-
-    if (monthlyGrossProfitPerCustomer > 0) {
-      cacPaybackMonths =
-        marketing.blendedCAC / monthlyGrossProfitPerCustomer;
-    }
-  }
-
-  const monthlyChurn = pctToRatio(cs.monthlyChurnRate);
-  if (monthlyChurn > 0) {
-    const avgLifetimeMonths = 1 / monthlyChurn;
-    const avgRevenuePerCustomer =
-      funnel.newArr / Math.max(funnel.wins, 1 || 1);
-    const monthlyRevenuePerCustomer = avgRevenuePerCustomer / 12;
-    ltv =
-      monthlyRevenuePerCustomer *
-      grossMarginRatio *
-      avgLifetimeMonths;
-  }
-
-  if (ltv && marketing.blendedCAC > 0) {
-    ltvToCac = ltv / marketing.blendedCAC;
-  }
-
-  const requiredPipeline =
-    finance.targetArr * sales.pipelineCoverageTarget;
-  const actualPipeline = sales.openPipelineValue;
-
-  let coverageStatus: "under" | "ok" | "strong" = "under";
-  let coverageRatio: number | null = null;
-
-  if (requiredPipeline > 0) {
-    coverageRatio = actualPipeline / requiredPipeline;
-    if (coverageRatio >= 1.2) coverageStatus = "strong";
-    else if (coverageRatio >= 0.9) coverageStatus = "ok";
-    else coverageStatus = "under";
-  }
-
-  return {
-    cacPaybackMonths,
-    ltv,
-    ltvToCac,
-    pipelineCoverageActual: coverageRatio,
-    pipelineCoverageStatus: coverageStatus
-  };
-}
-
-export function generateRecommendations(
-  marketing: MarketingInputs,
-  sales: SalesInputs,
-  cs: CsInputs,
-  finance: FinanceInputs,
-  outputs: CalculatorResult
-): Recommendation[] {
-  const recs: Recommendation[] = [];
-
-  const { funnel, efficiency, forecast } = outputs;
-
-  if (marketing.leads === 0 || funnel.mqls === 0) {
-    recs.push({
-      area: "Marketing",
-      severity: "critical",
-      message:
-        "Lead generation and MQL volume look very low. Review ICP, channels, and top-of-funnel acquisition."
-    });
-  }
-
-  if (funnel.opportunities < 0.1 * funnel.sqls) {
-    recs.push({
-      area: "Sales",
-      severity: "warning",
-      message:
-        "SQL to opportunity conversion is weak. Tighten qualification and refine handoff between marketing and sales."
-    });
-  }
-
-  if (forecast.churnedArrYear > 0.1 * finance.currentArr) {
-    recs.push({
-      area: "Customer Success",
-      severity: "critical",
-      message:
-        "Annual churn is high relative to current ARR. Focus on onboarding, product adoption, and at-risk account playbooks."
-    });
-  }
-
-  if (
-    efficiency.cacPaybackMonths !== null &&
-    efficiency.cacPaybackMonths > 18
-  ) {
-    recs.push({
-      area: "Efficiency",
-      severity: "warning",
-      message:
-        "CAC payback period is long. Review acquisition efficiency, pricing, and expansion motions."
-    });
-  }
-
-  if (
-    efficiency.ltvToCac !== null &&
-    efficiency.ltvToCac < 3
-  ) {
-    recs.push({
-      area: "Unit Economics",
-      severity: "warning",
-      message:
-        "LTV/CAC is below 3x. Improve retention, expansion, or reduce CAC to strengthen unit economics."
-    });
-  }
-
-  if (efficiency.pipelineCoverageStatus === "under") {
-    recs.push({
-      area: "Pipeline",
-      severity: "critical",
-      message:
-        "Pipeline coverage is below target. Increase quality pipeline generation or adjust revenue targets."
-    });
-  }
-
-  if (recs.length === 0) {
-    recs.push({
-      area: "Overview",
-      severity: "info",
-      message:
-        "The revenue system looks balanced. Use scenario sliders to explore where to invest for the next uplift."
-    });
-  }
-
-  return recs;
-}
-
+// Main entry
 export function calculateAll(
   marketing: MarketingInputs,
   sales: SalesInputs,
@@ -292,35 +95,228 @@ export function calculateAll(
   finance: FinanceInputs,
   scenarios: ScenarioAdjustments
 ): CalculatorResult {
-  const funnel = calculateFunnel(
-    marketing,
-    sales,
-    finance,
-    scenarios
-  );
-  const forecast = calculateForecast(finance, cs, funnel);
-  const efficiency = calculateEfficiency(
-    marketing,
-    cs,
-    finance,
-    funnel,
-    sales
+  const convLift = 1 + pctToDecimal(scenarios.convLiftPct);
+  const aspLift = 1 + pctToDecimal(scenarios.aspIncreasePct);
+  const churnReduction = 1 - pctToDecimal(scenarios.churnImprovementPct);
+
+  const mqlRate = clampPercent(marketing.mqlRate * convLift);
+  const sqlRate = clampPercent(marketing.sqlRate * convLift);
+  const oppRate = clampPercent(marketing.oppRate * convLift);
+  const oppToProposal = clampPercent(sales.oppToProposal * convLift);
+  const proposalToWin = clampPercent(sales.proposalToWin * convLift);
+
+  const baseMonthlyChurn = pctToDecimal(cs.monthlyChurnRate);
+  const effectiveMonthlyChurn = Math.max(
+    0,
+    baseMonthlyChurn * churnReduction
   );
 
-  const baseResult: CalculatorResult = {
+  const aspAdjusted = sales.asp * aspLift;
+
+  // ----- funnel (monthly throughput) -----
+
+  const mqls = marketing.leads * pctToDecimal(mqlRate);
+  const sqls = mqls * pctToDecimal(sqlRate);
+  const opportunities = sqls * pctToDecimal(oppRate);
+  const proposals = opportunities * pctToDecimal(oppToProposal);
+  const wins = proposals * pctToDecimal(proposalToWin);
+
+  // wins per month * ACV (annual) = new ARR per year
+  const newArrAnnual = wins * aspAdjusted;
+
+  const funnel: FunnelResult = {
+    mqls,
+    sqls,
+    opportunities,
+    proposals,
+    wins,
+    newArrAnnual
+  };
+
+  // ----- churn & expansion (yearly aggregates off starting ARR) -----
+
+  const startArr = Math.max(0, finance.currentArr);
+
+  // annual churn, approximated from monthly churn
+  const annualChurnRate =
+    1 - Math.pow(1 - effectiveMonthlyChurn, 12);
+  const churnedArrYear = startArr * annualChurnRate;
+
+  const expansionArrYear =
+    startArr * pctToDecimal(cs.expansionRate);
+
+  // ----- forecast: month-by-month, using monthly flows -----
+
+  const monthlyNewArr = newArrAnnual / 12;
+  const monthlyExpansionArr = expansionArrYear / 12;
+
+  let arr = startArr;
+  let arr3m = startArr;
+  let arr6m = startArr;
+  let arr12m = startArr;
+
+  for (let month = 1; month <= 12; month++) {
+    const churnThisMonth = arr * effectiveMonthlyChurn;
+    arr =
+      arr + monthlyNewArr + monthlyExpansionArr - churnThisMonth;
+
+    if (month === 3) arr3m = arr;
+    if (month === 6) arr6m = arr;
+    if (month === 12) arr12m = arr;
+  }
+
+  // approximate net new per month based on starting point
+  const approxMonthlyNetNew =
+    monthlyNewArr +
+    monthlyExpansionArr -
+    startArr * effectiveMonthlyChurn;
+
+  const forecast: ForecastResult = {
+    projectedArr3m: arr3m,
+    projectedArr6m: arr6m,
+    projectedArr12m: arr12m,
+    churnedArrYear,
+    expansionArrYear,
+    monthlyNewArr,
+    monthlyNetNewArr: approxMonthlyNetNew
+  };
+
+  // ----- efficiency metrics -----
+
+  const grossMarginDec = pctToDecimal(cs.grossMargin);
+
+  let cacPaybackMonths: number | null = null;
+  let ltv: number | null = null;
+  let ltvToCac: number | null = null;
+
+  if (marketing.blendedCAC > 0 && aspAdjusted > 0 && grossMarginDec > 0) {
+    const monthlyGrossProfitPerCustomer =
+      (aspAdjusted / 12) * grossMarginDec;
+    if (monthlyGrossProfitPerCustomer > 0) {
+      cacPaybackMonths =
+        marketing.blendedCAC / monthlyGrossProfitPerCustomer;
+    }
+  }
+
+  if (annualChurnRate > 0 && aspAdjusted > 0 && grossMarginDec > 0) {
+    ltv = (aspAdjusted * grossMarginDec) / annualChurnRate;
+  }
+
+  if (ltv && marketing.blendedCAC > 0) {
+    ltvToCac = ltv / marketing.blendedCAC;
+  }
+
+  // pipeline coverage vs target ARR gap
+  let pipelineCoverageActual: number | null = null;
+  let pipelineCoverageStatus: "strong" | "ok" | "under" = "under";
+
+  const gapToTarget = finance.targetArr - finance.currentArr;
+  if (gapToTarget > 0 && sales.pipelineCoverageTarget > 0) {
+    const requiredPipeline =
+      gapToTarget * sales.pipelineCoverageTarget;
+    if (requiredPipeline > 0) {
+      pipelineCoverageActual =
+        sales.openPipelineValue / requiredPipeline; // 1 = on target
+    }
+  }
+
+  if (pipelineCoverageActual === null) {
+    pipelineCoverageStatus = "ok";
+  } else if (pipelineCoverageActual >= 1) {
+    pipelineCoverageStatus = "strong";
+  } else if (pipelineCoverageActual >= 0.7) {
+    pipelineCoverageStatus = "ok";
+  } else {
+    pipelineCoverageStatus = "under";
+  }
+
+  const efficiency: EfficiencyResult = {
+    cacPaybackMonths,
+    ltv,
+    ltvToCac,
+    pipelineCoverageActual,
+    pipelineCoverageStatus
+  };
+
+  // ----- recommendations (simple heuristics) -----
+
+  const recommendations: Recommendation[] = [];
+
+  // churn vs new ARR
+  if (churnedArrYear > newArrAnnual) {
+    recommendations.push({
+      area: "Churn & Retention",
+      severity: "critical",
+      message:
+        "You lose more ARR in churn than you add from new customers. Prioritise reducing monthly churn and increasing expansion before you scale top-of-funnel."
+    });
+  }
+
+  // conversion chain
+  if (mqlRate < marketing.mqlRate && marketing.mqlRate > 0) {
+    // scenario lowered it, ignore
+  }
+  if (pctToDecimal(mqlRate) < 0.2) {
+    recommendations.push({
+      area: "Lead → MQL",
+      severity: "warning",
+      message:
+        "Lead-to-MQL conversion is low. Revisit lead quality, ICP fit, and early qualification to improve downstream throughput."
+    });
+  }
+
+  if (pctToDecimal(sqlRate) < 0.3) {
+    recommendations.push({
+      area: "MQL → SQL",
+      severity: "warning",
+      message:
+        "MQL-to-SQL conversion is soft. Tighten qualification criteria and handover between marketing and sales."
+    });
+  }
+
+  // CAC payback
+  if (cacPaybackMonths && cacPaybackMonths > 18) {
+    recommendations.push({
+      area: "CAC Payback",
+      severity: "critical",
+      message:
+        "CAC payback is longer than 18 months. Either reduce CAC or increase pricing / upsell to reach a more sustainable payback period."
+    });
+  }
+
+  // LTV/CAC
+  if (ltvToCac && ltvToCac < 3) {
+    recommendations.push({
+      area: "Unit Economics",
+      severity: "warning",
+      message:
+        "LTV/CAC is below 3x. Improve retention, expansion, or efficiency in acquisition to strengthen unit economics."
+    });
+  }
+
+  // pipeline coverage
+  if (pipelineCoverageActual !== null && pipelineCoverageActual < 1) {
+    recommendations.push({
+      area: "Pipeline Coverage",
+      severity: "warning",
+      message:
+        "Open pipeline is below the required coverage for your ARR target. Build more qualified pipeline or adjust your coverage target."
+    });
+  }
+
+  if (recommendations.length === 0) {
+    recommendations.push({
+      area: "Overview",
+      severity: "neutral",
+      message:
+        "Funnel and economics look broadly healthy. Use scenarios to test where modest improvements in conversion, churn, or ASP create the biggest uplift in ARR."
+    });
+  }
+
+  return {
     funnel,
     forecast,
     efficiency,
-    recommendations: []
+    recommendations
   };
-
-  const recommendations = generateRecommendations(
-    marketing,
-    sales,
-    cs,
-    finance,
-    baseResult
-  );
-
-  return { ...baseResult, recommendations };
 }
