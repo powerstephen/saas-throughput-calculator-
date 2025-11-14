@@ -58,7 +58,6 @@ export default function Page() {
 
   // ------------------------
   // BENCHMARK STATE
-  // (these drive the little "benchmark" numbers in the UI)
   // ------------------------
 
   const [showBenchmarkSettings, setShowBenchmarkSettings] = useState(false);
@@ -95,16 +94,30 @@ export default function Page() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-6 space-y-2">
-        <h1 className="text-xl font-semibold text-slate-900">
-          SaaS Revenue Throughput & Forecast Dashboard
-        </h1>
-        <p className="max-w-3xl text-sm text-slate-600">
-          Full-funnel view of acquisition, conversion, retention, and
-          profitability. Enter your monthly actuals, set enterprise
-          benchmarks, and see the impact on ARR forecast, churn, and
-          pipeline risk.
-        </p>
+      {/* HEADER WITH BENCHMARK BUTTON ON THE RIGHT */}
+      <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-xl font-semibold text-slate-900">
+            SaaS Revenue Throughput & Forecast Dashboard
+          </h1>
+          <p className="max-w-3xl text-sm text-slate-600">
+            Full-funnel view of acquisition, conversion, retention, and
+            profitability. Enter your monthly actuals, set enterprise
+            benchmarks, and see the impact on ARR forecast, churn, and
+            pipeline risk.
+          </p>
+        </div>
+        <div className="shrink-0">
+          <button
+            type="button"
+            onClick={() =>
+              setShowBenchmarkSettings((prev) => !prev)
+            }
+            className="rounded-full border border-slate-300 px-4 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50"
+          >
+            {showBenchmarkSettings ? "Hide benchmarks" : "Adjust benchmarks"}
+          </button>
+        </div>
       </header>
 
       {/* HERO DASHBOARD */}
@@ -325,61 +338,21 @@ export default function Page() {
           </InputSection>
         </div>
 
-        {/* ARR INPUTS */}
-        <InputSection
-          title="ARR Inputs"
-          subtitle="Starting ARR and 12-month target for the forecast."
-        >
-          <NumberInput
-            label="Current ARR"
-            suffix="€"
-            value={finance.currentArr}
-            onChange={(v) =>
-              setFinance({
-                ...finance,
-                currentArr: v,
-              })
-            }
-          />
-          <NumberInput
-            label="Target ARR (12 months)"
-            suffix="€"
-            value={finance.targetArr}
-            onChange={(v) =>
-              setFinance({
-                ...finance,
-                targetArr: v,
-              })
-            }
-          />
-        </InputSection>
-
-        {/* BENCHMARK SETTINGS (TOGGLEABLE) */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <div>
+        {/* BENCHMARK SETTINGS (WITH ARR CURRENT/TARGET COLUMN) */}
+        {showBenchmarkSettings && (
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+            <div className="mb-3">
               <h2 className="text-sm font-semibold text-slate-900">
-                Benchmarks (optional)
+                Benchmarks
               </h2>
               <p className="text-xs text-slate-600">
-                Set your enterprise benchmarks for ACV, churn, expansion, and
-                funnel performance. These power the grey benchmark values in
-                the inputs and make the dashboard feel less SMB-ish.
+                Set your enterprise benchmarks for ACV, churn, funnel
+                performance, and ARR. These power the grey benchmark values
+                in the inputs and help the dashboard reflect your motion.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() =>
-                setShowBenchmarkSettings((prev) => !prev)
-              }
-              className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-            >
-              {showBenchmarkSettings ? "Hide" : "Adjust"}
-            </button>
-          </div>
 
-          {showBenchmarkSettings && (
-            <div className="mt-3 grid gap-4 md:grid-cols-3">
+            <div className="mt-3 grid gap-4 md:grid-cols-4">
               {/* Marketing benchmarks */}
               <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
                 <h3 className="text-xs font-semibold text-slate-800">
@@ -532,15 +505,49 @@ export default function Page() {
                   }
                 />
               </div>
+
+              {/* ARR benchmarks / inputs */}
+              <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+                <h3 className="text-xs font-semibold text-slate-800">
+                  ARR & growth benchmarks
+                </h3>
+                <NumberInput
+                  label="Current ARR"
+                  suffix="€"
+                  value={finance.currentArr}
+                  onChange={(v) =>
+                    setFinance({
+                      ...finance,
+                      currentArr: v,
+                    })
+                  }
+                />
+                <NumberInput
+                  label="Target ARR (12 months)"
+                  suffix="€"
+                  value={finance.targetArr}
+                  onChange={(v) =>
+                    setFinance({
+                      ...finance,
+                      targetArr: v,
+                    })
+                  }
+                />
+              </div>
             </div>
-          )}
-        </section>
+          </section>
+        )}
 
         {/* SCENARIO PLANNING AT THE BOTTOM */}
-        <ScenarioPanel
-          scenarios={scenarios}
-          onChange={setScenarios}
-        />
+        <InputSection
+          title="Scenario planning"
+          subtitle="Test what happens if you lift conversion, reduce churn, or increase ACV. Sliders directly adjust the model in the dashboard above."
+        >
+          <ScenarioPanel
+            scenarios={scenarios}
+            onChange={setScenarios}
+          />
+        </InputSection>
       </div>
     </main>
   );
