@@ -5,7 +5,6 @@ import InputSection from "@/components/InputSection";
 import NumberInput from "@/components/NumberInput";
 import ScenarioPanel from "@/components/ScenarioPanel";
 import ResultsPanel from "@/components/ResultsPanel";
-import Tabs, { TabKeyType } from "@/components/Tabs";
 import MetricInputWithBenchmark from "@/components/MetricInputWithBenchmark";
 import {
   calculateAll,
@@ -17,9 +16,6 @@ import {
 } from "@/lib/calculations";
 
 export default function Page() {
-  const [activeTab, setActiveTab] =
-    useState<TabKeyType>("marketing");
-
   const [marketing, setMarketing] = useState<MarketingInputs>({
     traffic: 50000,
     leads: 1500,
@@ -57,6 +53,7 @@ export default function Page() {
       aspIncreasePct: 0
     });
 
+  // Benchmarks – tweak as you like
   const marketingBenchmarks = {
     mqlRate: 30,
     sqlRate: 40,
@@ -97,240 +94,229 @@ export default function Page() {
         </h1>
         <p className="max-w-3xl text-sm text-slate-600">
           Full-funnel view of acquisition, conversion,
-          retention, and profitability. Review the output, then
-          adjust inputs by function and test scenarios.
+          retention, and profitability. Adjust inputs across
+          marketing, sales, and customer success, then see the
+          impact on ARR, churn, and unit economics.
         </p>
       </header>
 
-      {/* Full-funnel output at the top */}
+      {/* Full-funnel dashboard at the top */}
       <div className="mb-6">
         <ResultsPanel result={result} />
       </div>
 
-      {/* Inputs + scenarios below */}
-      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-        {/* LEFT COLUMN: Tabs + Inputs + Finance */}
+      {/* Main layout: inputs on the left, scenarios on the right */}
+      <div className="grid gap-6 lg:grid-cols-[3fr,1fr]">
+        {/* LEFT: three columns of inputs + finance */}
         <div className="space-y-4">
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <Tabs active={activeTab} onChange={setActiveTab} />
-              <div className="text-[11px] text-slate-500">
-                Enter actuals for each function and compare to
-                benchmark.
-              </div>
-            </div>
+          {/* Marketing / Sales / CS side by side */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <InputSection
+              title="Marketing"
+              subtitle="Acquisition and early-funnel performance."
+            >
+              <NumberInput
+                label="Monthly website traffic"
+                value={marketing.traffic}
+                onChange={(v) =>
+                  setMarketing({
+                    ...marketing,
+                    traffic: v
+                  })
+                }
+              />
+              <NumberInput
+                label="Leads per month"
+                value={marketing.leads}
+                onChange={(v) =>
+                  setMarketing({
+                    ...marketing,
+                    leads: v
+                  })
+                }
+              />
+              <MetricInputWithBenchmark
+                label="Lead → MQL"
+                value={marketing.mqlRate}
+                onChange={(v) =>
+                  setMarketing({
+                    ...marketing,
+                    mqlRate: v
+                  })
+                }
+                benchmark={marketingBenchmarks.mqlRate}
+                mode="percent"
+              />
+              <MetricInputWithBenchmark
+                label="MQL → SQL"
+                value={marketing.sqlRate}
+                onChange={(v) =>
+                  setMarketing({
+                    ...marketing,
+                    sqlRate: v
+                  })
+                }
+                benchmark={marketingBenchmarks.sqlRate}
+                mode="percent"
+              />
+              <MetricInputWithBenchmark
+                label="SQL → Opportunity"
+                value={marketing.oppRate}
+                onChange={(v) =>
+                  setMarketing({
+                    ...marketing,
+                    oppRate: v
+                  })
+                }
+                benchmark={marketingBenchmarks.oppRate}
+                mode="percent"
+              />
+              <MetricInputWithBenchmark
+                label="Blended CAC per new customer"
+                value={marketing.blendedCAC}
+                onChange={(v) =>
+                  setMarketing({
+                    ...marketing,
+                    blendedCAC: v
+                  })
+                }
+                benchmark={marketingBenchmarks.blendedCAC}
+                mode="currency"
+              />
+            </InputSection>
 
-            {activeTab === "marketing" && (
-              <InputSection
-                title="Marketing (Acquisition)"
-                subtitle="Traffic, leads, and early-funnel conversion."
-              >
-                <NumberInput
-                  label="Monthly website traffic"
-                  value={marketing.traffic}
-                  onChange={(v) =>
-                    setMarketing({
-                      ...marketing,
-                      traffic: v
-                    })
-                  }
-                />
-                <NumberInput
-                  label="Leads per month"
-                  value={marketing.leads}
-                  onChange={(v) =>
-                    setMarketing({
-                      ...marketing,
-                      leads: v
-                    })
-                  }
-                />
-                <MetricInputWithBenchmark
-                  label="Lead → MQL"
-                  value={marketing.mqlRate}
-                  onChange={(v) =>
-                    setMarketing({
-                      ...marketing,
-                      mqlRate: v
-                    })
-                  }
-                  benchmark={marketingBenchmarks.mqlRate}
-                  mode="percent"
-                />
-                <MetricInputWithBenchmark
-                  label="MQL → SQL"
-                  value={marketing.sqlRate}
-                  onChange={(v) =>
-                    setMarketing({
-                      ...marketing,
-                      sqlRate: v
-                    })
-                  }
-                  benchmark={marketingBenchmarks.sqlRate}
-                  mode="percent"
-                />
-                <MetricInputWithBenchmark
-                  label="SQL → Opportunity"
-                  value={marketing.oppRate}
-                  onChange={(v) =>
-                    setMarketing({
-                      ...marketing,
-                      oppRate: v
-                    })
-                  }
-                  benchmark={marketingBenchmarks.oppRate}
-                  mode="percent"
-                />
-                <MetricInputWithBenchmark
-                  label="Blended CAC per new customer"
-                  value={marketing.blendedCAC}
-                  onChange={(v) =>
-                    setMarketing({
-                      ...marketing,
-                      blendedCAC: v
-                    })
-                  }
-                  benchmark={marketingBenchmarks.blendedCAC}
-                  mode="currency"
-                />
-              </InputSection>
-            )}
+            <InputSection
+              title="Sales"
+              subtitle="Pipeline, conversion, and deal value."
+            >
+              <MetricInputWithBenchmark
+                label="Opp → Proposal"
+                value={sales.oppToProposal}
+                onChange={(v) =>
+                  setSales({
+                    ...sales,
+                    oppToProposal: v
+                  })
+                }
+                benchmark={salesBenchmarks.oppToProposal}
+                mode="percent"
+              />
+              <MetricInputWithBenchmark
+                label="Proposal → Won"
+                value={sales.proposalToWin}
+                onChange={(v) =>
+                  setSales({
+                    ...sales,
+                    proposalToWin: v
+                  })
+                }
+                benchmark={salesBenchmarks.proposalToWin}
+                mode="percent"
+              />
+              <MetricInputWithBenchmark
+                label="Average sale price (ACV)"
+                value={sales.asp}
+                onChange={(v) =>
+                  setSales({
+                    ...sales,
+                    asp: v
+                  })
+                }
+                benchmark={salesBenchmarks.asp}
+                mode="currency"
+              />
+              <NumberInput
+                label="Sales cycle"
+                suffix="days"
+                value={sales.salesCycleDays}
+                onChange={(v) =>
+                  setSales({
+                    ...sales,
+                    salesCycleDays: v
+                  })
+                }
+              />
+              <NumberInput
+                label="Pipeline coverage target"
+                suffix="× ARR"
+                value={sales.pipelineCoverageTarget}
+                onChange={(v) =>
+                  setSales({
+                    ...sales,
+                    pipelineCoverageTarget: v
+                  })
+                }
+                step={0.5}
+              />
+              <NumberInput
+                label="Current open pipeline value"
+                suffix="€"
+                value={sales.openPipelineValue}
+                onChange={(v) =>
+                  setSales({
+                    ...sales,
+                    openPipelineValue: v
+                  })
+                }
+              />
+            </InputSection>
 
-            {activeTab === "sales" && (
-              <InputSection
-                title="Sales (Pipeline & Conversion)"
-                subtitle="From opportunity to closed-won and ASP."
-              >
-                <MetricInputWithBenchmark
-                  label="Opp → Proposal"
-                  value={sales.oppToProposal}
-                  onChange={(v) =>
-                    setSales({
-                      ...sales,
-                      oppToProposal: v
-                    })
-                  }
-                  benchmark={salesBenchmarks.oppToProposal}
-                  mode="percent"
-                />
-                <MetricInputWithBenchmark
-                  label="Proposal → Won"
-                  value={sales.proposalToWin}
-                  onChange={(v) =>
-                    setSales({
-                      ...sales,
-                      proposalToWin: v
-                    })
-                  }
-                  benchmark={salesBenchmarks.proposalToWin}
-                  mode="percent"
-                />
-                <MetricInputWithBenchmark
-                  label="Average sale price (ACV)"
-                  value={sales.asp}
-                  onChange={(v) =>
-                    setSales({
-                      ...sales,
-                      asp: v
-                    })
-                  }
-                  benchmark={salesBenchmarks.asp}
-                  mode="currency"
-                />
-                <NumberInput
-                  label="Sales cycle"
-                  suffix="days"
-                  value={sales.salesCycleDays}
-                  onChange={(v) =>
-                    setSales({
-                      ...sales,
-                      salesCycleDays: v
-                    })
-                  }
-                />
-                <NumberInput
-                  label="Pipeline coverage target"
-                  suffix="× ARR"
-                  value={sales.pipelineCoverageTarget}
-                  onChange={(v) =>
-                    setSales({
-                      ...sales,
-                      pipelineCoverageTarget: v
-                    })
-                  }
-                  step={0.5}
-                />
-                <NumberInput
-                  label="Current open pipeline value"
-                  suffix="€"
-                  value={sales.openPipelineValue}
-                  onChange={(v) =>
-                    setSales({
-                      ...sales,
-                      openPipelineValue: v
-                    })
-                  }
-                />
-              </InputSection>
-            )}
+            <InputSection
+              title="Customer Success"
+              subtitle="Retention, expansion, and margin."
+            >
+              <MetricInputWithBenchmark
+                label="Monthly churn rate"
+                value={cs.monthlyChurnRate}
+                onChange={(v) =>
+                  setCs({
+                    ...cs,
+                    monthlyChurnRate: v
+                  })
+                }
+                benchmark={csBenchmarks.monthlyChurnRate}
+                mode="percent"
+              />
+              <MetricInputWithBenchmark
+                label="Expansion rate (ARR per year)"
+                value={cs.expansionRate}
+                onChange={(v) =>
+                  setCs({
+                    ...cs,
+                    expansionRate: v
+                  })
+                }
+                benchmark={csBenchmarks.expansionRate}
+                mode="percent"
+              />
+              <MetricInputWithBenchmark
+                label="NRR"
+                value={cs.nrr}
+                onChange={(v) =>
+                  setCs({ ...cs, nrr: v })
+                }
+                benchmark={csBenchmarks.nrr}
+                mode="percent"
+              />
+              <MetricInputWithBenchmark
+                label="Gross margin"
+                value={cs.grossMargin}
+                onChange={(v) =>
+                  setCs({
+                    ...cs,
+                    grossMargin: v
+                  })
+                }
+                benchmark={csBenchmarks.grossMargin}
+                mode="percent"
+              />
+            </InputSection>
+          </div>
 
-            {activeTab === "cs" && (
-              <InputSection
-                title="Customer Success (Retention & Expansion)"
-                subtitle="Churn, expansion, and margin profile."
-              >
-                <MetricInputWithBenchmark
-                  label="Monthly churn rate"
-                  value={cs.monthlyChurnRate}
-                  onChange={(v) =>
-                    setCs({
-                      ...cs,
-                      monthlyChurnRate: v
-                    })
-                  }
-                  benchmark={csBenchmarks.monthlyChurnRate}
-                  mode="percent"
-                />
-                <MetricInputWithBenchmark
-                  label="Expansion rate (ARR per year)"
-                  value={cs.expansionRate}
-                  onChange={(v) =>
-                    setCs({
-                      ...cs,
-                      expansionRate: v
-                    })
-                  }
-                  benchmark={csBenchmarks.expansionRate}
-                  mode="percent"
-                />
-                <MetricInputWithBenchmark
-                  label="NRR"
-                  value={cs.nrr}
-                  onChange={(v) =>
-                    setCs({ ...cs, nrr: v })
-                  }
-                  benchmark={csBenchmarks.nrr}
-                  mode="percent"
-                />
-                <MetricInputWithBenchmark
-                  label="Gross margin"
-                  value={cs.grossMargin}
-                  onChange={(v) =>
-                    setCs({
-                      ...cs,
-                      grossMargin: v
-                    })
-                  }
-                  benchmark={csBenchmarks.grossMargin}
-                  mode="percent"
-                />
-              </InputSection>
-            )}
-          </section>
-
+          {/* Finance – still needed for the forecast, but small and simple */}
           <InputSection
-            title="Finance (ARR Targets)"
-            subtitle="Current and target ARR for planning and coverage."
+            title="ARR Inputs"
+            subtitle="Starting point and 12-month target for the model."
           >
             <NumberInput
               label="Current ARR"
@@ -357,7 +343,7 @@ export default function Page() {
           </InputSection>
         </div>
 
-        {/* RIGHT COLUMN: Scenario panel */}
+        {/* RIGHT: scenario panel */}
         <div className="space-y-4">
           <ScenarioPanel
             scenarios={scenarios}
