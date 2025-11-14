@@ -52,6 +52,9 @@ export default function Page() {
     targetArr: 2500000,
   });
 
+  // timeframe is kept separate so we don't have to touch lib/calculations types
+  const [timeframeMonths, setTimeframeMonths] = useState<number>(12);
+
   const [scenarios, setScenarios] = useState<ScenarioAdjustments>({
     convLiftPct: 0,
     churnImprovementPct: 0,
@@ -104,7 +107,8 @@ export default function Page() {
           </h1>
           <p className="max-w-3xl text-sm text-slate-600">
             Full-funnel view of acquisition, conversion, retention, and ARR forecasting.
-            Adjust enterprise benchmarks and track gaps instantly.
+            Adjust enterprise benchmarks and timeframes to see if your run rate
+            is enough to hit target.
           </p>
         </div>
 
@@ -123,7 +127,9 @@ export default function Page() {
           <div className="mb-3">
             <h2 className="text-sm font-semibold text-slate-900">Benchmarks</h2>
             <p className="text-xs text-slate-600">
-              Enterprise benchmarks for ACV, churn, conversion performance, and ARR.
+              Enterprise benchmarks for ACV, churn, conversion performance, and ARR target
+              timeframe. These drive the grey benchmark hints in the inputs and the run-rate
+              diagnostics in the dashboard.
             </p>
           </div>
 
@@ -253,9 +259,9 @@ export default function Page() {
               />
             </div>
 
-            {/* ARR benchmarks */}
+            {/* ARR + timeframe */}
             <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-              <h3 className="text-xs font-semibold text-slate-800">ARR</h3>
+              <h3 className="text-xs font-semibold text-slate-800">ARR Target</h3>
               <NumberInput
                 label="Current ARR"
                 suffix="€"
@@ -265,11 +271,19 @@ export default function Page() {
                 }
               />
               <NumberInput
-                label="12-month ARR target"
+                label="ARR target"
                 suffix="€"
                 value={finance.targetArr}
                 onChange={(v) =>
                   setFinance({ ...finance, targetArr: v })
+                }
+              />
+              <NumberInput
+                label="Timeframe to target"
+                suffix="months"
+                value={timeframeMonths}
+                onChange={(v) =>
+                  setTimeframeMonths(v > 0 ? v : 1)
                 }
               />
             </div>
@@ -280,10 +294,11 @@ export default function Page() {
       {/* HERO DASHBOARD */}
       <div className="mb-6">
         <ResultsPanel
-  result={result}
-  currentArr={finance.currentArr}
-  targetArr={finance.targetArr}
-/>
+          result={result}
+          currentArr={finance.currentArr}
+          targetArr={finance.targetArr}
+          timeframeMonths={timeframeMonths}
+        />
       </div>
 
       {/* 3 COLS: Marketing, Sales, CS */}
