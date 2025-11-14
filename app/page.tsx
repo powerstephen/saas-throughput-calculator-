@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
 import InputSection from "@/components/InputSection";
 import NumberInput from "@/components/NumberInput";
@@ -118,171 +117,165 @@ export default function Page() {
         </button>
       </header>
 
-      {/* BENCHMARK DROPDOWN (ANIMATED) */}
-      <AnimatePresence>
-        {showBenchmarkSettings && (
-          <motion.section
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft"
-          >
-            <div className="mb-3">
-              <h2 className="text-sm font-semibold text-slate-900">Benchmarks</h2>
-              <p className="text-xs text-slate-600">
-                Enterprise benchmarks for ACV, churn, conversion performance, and ARR.
-              </p>
+      {/* BENCHMARK DROPDOWN UNDER HEADER */}
+      {showBenchmarkSettings && (
+        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+          <div className="mb-3">
+            <h2 className="text-sm font-semibold text-slate-900">Benchmarks</h2>
+            <p className="text-xs text-slate-600">
+              Enterprise benchmarks for ACV, churn, conversion performance, and ARR.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-4">
+            {/* Marketing benchmarks */}
+            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+              <h3 className="text-xs font-semibold text-slate-800">Marketing</h3>
+              <NumberInput
+                label="Lead → MQL target"
+                suffix="%"
+                value={marketingBenchmarks.mqlRate}
+                onChange={(v) =>
+                  setMarketingBenchmarks({ ...marketingBenchmarks, mqlRate: v })
+                }
+              />
+              <NumberInput
+                label="MQL → SQL target"
+                suffix="%"
+                value={marketingBenchmarks.sqlRate}
+                onChange={(v) =>
+                  setMarketingBenchmarks({ ...marketingBenchmarks, sqlRate: v })
+                }
+              />
+              <NumberInput
+                label="SQL → Opp target"
+                suffix="%"
+                value={marketingBenchmarks.oppRate}
+                onChange={(v) =>
+                  setMarketingBenchmarks({ ...marketingBenchmarks, oppRate: v })
+                }
+              />
+              <NumberInput
+                label="Blended CAC target"
+                suffix="€"
+                value={marketingBenchmarks.blendedCAC}
+                onChange={(v) =>
+                  setMarketingBenchmarks({
+                    ...marketingBenchmarks,
+                    blendedCAC: v,
+                  })
+                }
+              />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-4">
-              {/* Marketing benchmarks */}
-              <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-                <h3 className="text-xs font-semibold text-slate-800">Marketing</h3>
-                <NumberInput
-                  label="Lead → MQL target"
-                  suffix="%"
-                  value={marketingBenchmarks.mqlRate}
-                  onChange={(v) =>
-                    setMarketingBenchmarks({ ...marketingBenchmarks, mqlRate: v })
-                  }
-                />
-                <NumberInput
-                  label="MQL → SQL target"
-                  suffix="%"
-                  value={marketingBenchmarks.sqlRate}
-                  onChange={(v) =>
-                    setMarketingBenchmarks({ ...marketingBenchmarks, sqlRate: v })
-                  }
-                />
-                <NumberInput
-                  label="SQL → Opp target"
-                  suffix="%"
-                  value={marketingBenchmarks.oppRate}
-                  onChange={(v) =>
-                    setMarketingBenchmarks({ ...marketingBenchmarks, oppRate: v })
-                  }
-                />
-                <NumberInput
-                  label="Blended CAC target"
-                  suffix="€"
-                  value={marketingBenchmarks.blendedCAC}
-                  onChange={(v) =>
-                    setMarketingBenchmarks({
-                      ...marketingBenchmarks,
-                      blendedCAC: v,
-                    })
-                  }
-                />
-              </div>
-
-              {/* Sales benchmarks */}
-              <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-                <h3 className="text-xs font-semibold text-slate-800">Sales</h3>
-                <NumberInput
-                  label="SQL → Opp target"
-                  suffix="%"
-                  value={salesBenchmarks.sqlToOpp}
-                  onChange={(v) =>
-                    setSalesBenchmarks({ ...salesBenchmarks, sqlToOpp: v })
-                  }
-                />
-                <NumberInput
-                  label="Opp → Proposal target"
-                  suffix="%"
-                  value={salesBenchmarks.oppToProposal}
-                  onChange={(v) =>
-                    setSalesBenchmarks({
-                      ...salesBenchmarks,
-                      oppToProposal: v,
-                    })
-                  }
-                />
-                <NumberInput
-                  label="Proposal → Win target"
-                  suffix="%"
-                  value={salesBenchmarks.proposalToWin}
-                  onChange={(v) =>
-                    setSalesBenchmarks({
-                      ...salesBenchmarks,
-                      proposalToWin: v,
-                    })
-                  }
-                />
-                <NumberInput
-                  label="ACV target"
-                  suffix="€"
-                  value={salesBenchmarks.asp}
-                  onChange={(v) =>
-                    setSalesBenchmarks({ ...salesBenchmarks, asp: v })
-                  }
-                />
-              </div>
-
-              {/* CS benchmarks */}
-              <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-                <h3 className="text-xs font-semibold text-slate-800">Customer Success</h3>
-                <NumberInput
-                  label="Monthly churn target"
-                  suffix="%"
-                  value={csBenchmarks.monthlyChurnRate}
-                  onChange={(v) =>
-                    setCsBenchmarks({
-                      ...csBenchmarks,
-                      monthlyChurnRate: v,
-                    })
-                  }
-                />
-                <NumberInput
-                  label="Expansion target"
-                  suffix="%"
-                  value={csBenchmarks.expansionRate}
-                  onChange={(v) =>
-                    setCsBenchmarks({ ...csBenchmarks, expansionRate: v })
-                  }
-                />
-                <NumberInput
-                  label="NRR target"
-                  suffix="%"
-                  value={csBenchmarks.nrr}
-                  onChange={(v) =>
-                    setCsBenchmarks({ ...csBenchmarks, nrr: v })
-                  }
-                />
-                <NumberInput
-                  label="Gross Margin target"
-                  suffix="%"
-                  value={csBenchmarks.grossMargin}
-                  onChange={(v) =>
-                    setCsBenchmarks({ ...csBenchmarks, grossMargin: v })
-                  }
-                />
-              </div>
-
-              {/* ARR benchmarks */}
-              <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-                <h3 className="text-xs font-semibold text-slate-800">ARR</h3>
-                <NumberInput
-                  label="Current ARR"
-                  suffix="€"
-                  value={finance.currentArr}
-                  onChange={(v) =>
-                    setFinance({ ...finance, currentArr: v })
-                  }
-                />
-                <NumberInput
-                  label="12-month ARR target"
-                  suffix="€"
-                  value={finance.targetArr}
-                  onChange={(v) =>
-                    setFinance({ ...finance, targetArr: v })
-                  }
-                />
-              </div>
+            {/* Sales benchmarks */}
+            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+              <h3 className="text-xs font-semibold text-slate-800">Sales</h3>
+              <NumberInput
+                label="SQL → Opp target"
+                suffix="%"
+                value={salesBenchmarks.sqlToOpp}
+                onChange={(v) =>
+                  setSalesBenchmarks({ ...salesBenchmarks, sqlToOpp: v })
+                }
+              />
+              <NumberInput
+                label="Opp → Proposal target"
+                suffix="%"
+                value={salesBenchmarks.oppToProposal}
+                onChange={(v) =>
+                  setSalesBenchmarks({
+                    ...salesBenchmarks,
+                    oppToProposal: v,
+                  })
+                }
+              />
+              <NumberInput
+                label="Proposal → Win target"
+                suffix="%"
+                value={salesBenchmarks.proposalToWin}
+                onChange={(v) =>
+                  setSalesBenchmarks({
+                    ...salesBenchmarks,
+                    proposalToWin: v,
+                  })
+                }
+              />
+              <NumberInput
+                label="ACV target"
+                suffix="€"
+                value={salesBenchmarks.asp}
+                onChange={(v) =>
+                  setSalesBenchmarks({ ...salesBenchmarks, asp: v })
+                }
+              />
             </div>
-          </motion.section>
-        )}
-      </AnimatePresence>
+
+            {/* CS benchmarks */}
+            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+              <h3 className="text-xs font-semibold text-slate-800">
+                Customer Success
+              </h3>
+              <NumberInput
+                label="Monthly churn target"
+                suffix="%"
+                value={csBenchmarks.monthlyChurnRate}
+                onChange={(v) =>
+                  setCsBenchmarks({
+                    ...csBenchmarks,
+                    monthlyChurnRate: v,
+                  })
+                }
+              />
+              <NumberInput
+                label="Expansion target"
+                suffix="%"
+                value={csBenchmarks.expansionRate}
+                onChange={(v) =>
+                  setCsBenchmarks({ ...csBenchmarks, expansionRate: v })
+                }
+              />
+              <NumberInput
+                label="NRR target"
+                suffix="%"
+                value={csBenchmarks.nrr}
+                onChange={(v) =>
+                  setCsBenchmarks({ ...csBenchmarks, nrr: v })
+                }
+              />
+              <NumberInput
+                label="Gross Margin target"
+                suffix="%"
+                value={csBenchmarks.grossMargin}
+                onChange={(v) =>
+                  setCsBenchmarks({ ...csBenchmarks, grossMargin: v })
+                }
+              />
+            </div>
+
+            {/* ARR benchmarks */}
+            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+              <h3 className="text-xs font-semibold text-slate-800">ARR</h3>
+              <NumberInput
+                label="Current ARR"
+                suffix="€"
+                value={finance.currentArr}
+                onChange={(v) =>
+                  setFinance({ ...finance, currentArr: v })
+                }
+              />
+              <NumberInput
+                label="12-month ARR target"
+                suffix="€"
+                value={finance.targetArr}
+                onChange={(v) =>
+                  setFinance({ ...finance, targetArr: v })
+                }
+              />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* HERO DASHBOARD */}
       <div className="mb-6">
