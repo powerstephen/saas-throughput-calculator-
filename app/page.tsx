@@ -12,78 +12,84 @@ import {
   SalesInputs,
   CsInputs,
   FinanceInputs,
-  ScenarioAdjustments
+  ScenarioAdjustments,
 } from "@/lib/calculations";
 
 export default function Page() {
+  // ------------------------
+  // INPUT STATE (actuals)
+  // ------------------------
+
   const [marketing, setMarketing] = useState<MarketingInputs>({
     traffic: 50000,
     leads: 1500,
     mqlRate: 25,
     sqlRate: 40,
     oppRate: 40,
-    blendedCAC: 2500
+    blendedCAC: 25000, // higher by default for enterprise
   });
 
   const [sales, setSales] = useState<SalesInputs>({
-    oppToProposal: 60,
+    oppToProposal: 50,
     proposalToWin: 25,
-    asp: 12000,
-    salesCycleDays: 45,
+    asp: 50000, // enterprise-style ACV default
+    salesCycleDays: 90,
     pipelineCoverageTarget: 3,
-    openPipelineValue: 600000
+    openPipelineValue: 1500000,
   });
 
   const [cs, setCs] = useState<CsInputs>({
-    monthlyChurnRate: 3,
-    expansionRate: 15,
-    nrr: 115,
-    grossMargin: 75
+    monthlyChurnRate: 1, // 1% monthly churn default
+    expansionRate: 20,
+    nrr: 120,
+    grossMargin: 75,
   });
 
   const [finance, setFinance] = useState<FinanceInputs>({
     currentArr: 1500000,
-    targetArr: 2500000
+    targetArr: 2500000,
   });
 
-  const [scenarios, setScenarios] =
-    useState<ScenarioAdjustments>({
-      convLiftPct: 0,
-      churnImprovementPct: 0,
-      aspIncreasePct: 0
-    });
+  const [scenarios, setScenarios] = useState<ScenarioAdjustments>({
+    convLiftPct: 0,
+    churnImprovementPct: 0,
+    aspIncreasePct: 0,
+  });
 
-  // Benchmarks – tweak as you like
-  const marketingBenchmarks = {
-    mqlRate: 30,
-    sqlRate: 40,
-    oppRate: 40,
-    blendedCAC: 2500
-  };
+  // ------------------------
+  // BENCHMARK STATE
+  // (these drive the little "benchmark" numbers in the UI)
+  // ------------------------
 
-  const salesBenchmarks = {
-    sqlToOpp: 40, // this is the SQL → Opportunity benchmark
-    oppToProposal: 60,
-    proposalToWin: 30,
-    asp: 12000
-  };
+  const [showBenchmarkSettings, setShowBenchmarkSettings] = useState(false);
 
-  const csBenchmarks = {
-    monthlyChurnRate: 2,
-    expansionRate: 15,
-    nrr: 115,
-    grossMargin: 75
-  };
+  const [marketingBenchmarks, setMarketingBenchmarks] = useState({
+    mqlRate: 25, // %
+    sqlRate: 40, // %
+    oppRate: 35, // %
+    blendedCAC: 25000, // €
+  });
+
+  const [salesBenchmarks, setSalesBenchmarks] = useState({
+    sqlToOpp: 35,        // % SQL → Opp
+    oppToProposal: 50,   // %
+    proposalToWin: 25,   // %
+    asp: 50000,          // € ACV
+  });
+
+  const [csBenchmarks, setCsBenchmarks] = useState({
+    monthlyChurnRate: 1, // %
+    expansionRate: 20,   // % / year
+    nrr: 120,            // %
+    grossMargin: 75,     // %
+  });
+
+  // ------------------------
+  // CALCULATIONS
+  // ------------------------
 
   const result = useMemo(
-    () =>
-      calculateAll(
-        marketing,
-        sales,
-        cs,
-        finance,
-        scenarios
-      ),
+    () => calculateAll(marketing, sales, cs, finance, scenarios),
     [marketing, sales, cs, finance, scenarios]
   );
 
@@ -91,30 +97,29 @@ export default function Page() {
     <main className="mx-auto max-w-6xl px-4 py-8">
       <header className="mb-6 space-y-2">
         <h1 className="text-xl font-semibold text-slate-900">
-          SaaS Revenue Throughput & Scenario Calculator
+          SaaS Revenue Throughput & Forecast Dashboard
         </h1>
         <p className="max-w-3xl text-sm text-slate-600">
-          Forecast ARR based on your current run rate, funnel
-          performance, churn, and expansion. Adjust inputs
-          across marketing, sales, and customer success, then
-          see the impact on 3 / 6 / 12 month ARR, CAC payback,
-          and pipeline risk.
+          Full-funnel view of acquisition, conversion, retention, and
+          profitability. Enter your monthly actuals, set enterprise
+          benchmarks, and see the impact on ARR forecast, churn, and
+          pipeline risk.
         </p>
       </header>
 
-      {/* Full-funnel dashboard at the top */}
+      {/* HERO DASHBOARD */}
       <div className="mb-6">
-       <ResultsPanel result={result} targetArr={finance.targetArr} />
+        <ResultsPanel result={result} targetArr={finance.targetArr} />
       </div>
 
-      {/* Main body: three functional blocks, then ARR inputs, then scenarios */}
+      {/* MAIN BODY */}
       <div className="space-y-4">
-        {/* Marketing / Sales / CS side by side */}
+        {/* MARKETING / SALES / CS SIDE BY SIDE */}
         <div className="grid gap-4 lg:grid-cols-3">
           {/* MARKETING */}
           <InputSection
             title="Marketing"
-            subtitle="Acquisition and early-funnel performance."
+            subtitle="Acquisition and early-funnel performance (monthly)."
           >
             <NumberInput
               label="Monthly website traffic"
@@ -122,7 +127,7 @@ export default function Page() {
               onChange={(v) =>
                 setMarketing({
                   ...marketing,
-                  traffic: v
+                  traffic: v,
                 })
               }
             />
@@ -132,7 +137,7 @@ export default function Page() {
               onChange={(v) =>
                 setMarketing({
                   ...marketing,
-                  leads: v
+                  leads: v,
                 })
               }
             />
@@ -142,7 +147,7 @@ export default function Page() {
               onChange={(v) =>
                 setMarketing({
                   ...marketing,
-                  mqlRate: v
+                  mqlRate: v,
                 })
               }
               benchmark={marketingBenchmarks.mqlRate}
@@ -154,7 +159,7 @@ export default function Page() {
               onChange={(v) =>
                 setMarketing({
                   ...marketing,
-                  sqlRate: v
+                  sqlRate: v,
                 })
               }
               benchmark={marketingBenchmarks.sqlRate}
@@ -166,7 +171,7 @@ export default function Page() {
               onChange={(v) =>
                 setMarketing({
                   ...marketing,
-                  blendedCAC: v
+                  blendedCAC: v,
                 })
               }
               benchmark={marketingBenchmarks.blendedCAC}
@@ -177,16 +182,16 @@ export default function Page() {
           {/* SALES */}
           <InputSection
             title="Sales"
-            subtitle="SQL to close, pipeline, and deal economics."
+            subtitle="SQL to close, ACV, and pipeline (monthly)."
           >
-            {/* SQL → Opportunity moved here, still wired into marketing.oppRate */}
+            {/* SQL → Opportunity lives here logically, but still uses marketing.oppRate as the actual */}
             <MetricInputWithBenchmark
               label="SQL → Opportunity"
               value={marketing.oppRate}
               onChange={(v) =>
                 setMarketing({
                   ...marketing,
-                  oppRate: v
+                  oppRate: v,
                 })
               }
               benchmark={salesBenchmarks.sqlToOpp}
@@ -198,7 +203,7 @@ export default function Page() {
               onChange={(v) =>
                 setSales({
                   ...sales,
-                  oppToProposal: v
+                  oppToProposal: v,
                 })
               }
               benchmark={salesBenchmarks.oppToProposal}
@@ -210,7 +215,7 @@ export default function Page() {
               onChange={(v) =>
                 setSales({
                   ...sales,
-                  proposalToWin: v
+                  proposalToWin: v,
                 })
               }
               benchmark={salesBenchmarks.proposalToWin}
@@ -222,7 +227,7 @@ export default function Page() {
               onChange={(v) =>
                 setSales({
                   ...sales,
-                  asp: v
+                  asp: v,
                 })
               }
               benchmark={salesBenchmarks.asp}
@@ -235,7 +240,7 @@ export default function Page() {
               onChange={(v) =>
                 setSales({
                   ...sales,
-                  salesCycleDays: v
+                  salesCycleDays: v,
                 })
               }
             />
@@ -246,18 +251,18 @@ export default function Page() {
               onChange={(v) =>
                 setSales({
                   ...sales,
-                  openPipelineValue: v
+                  openPipelineValue: v,
                 })
               }
             />
             <NumberInput
               label="Pipeline coverage target"
-              suffix="× ARR"
+              suffix="× ARR gap"
               value={sales.pipelineCoverageTarget}
               onChange={(v) =>
                 setSales({
                   ...sales,
-                  pipelineCoverageTarget: v
+                  pipelineCoverageTarget: v,
                 })
               }
               step={0.5}
@@ -267,7 +272,7 @@ export default function Page() {
           {/* CUSTOMER SUCCESS */}
           <InputSection
             title="Customer Success"
-            subtitle="Retention, expansion, and margin."
+            subtitle="Churn, expansion, and margin (monthly basis)."
           >
             <MetricInputWithBenchmark
               label="Monthly churn rate"
@@ -275,7 +280,7 @@ export default function Page() {
               onChange={(v) =>
                 setCs({
                   ...cs,
-                  monthlyChurnRate: v
+                  monthlyChurnRate: v,
                 })
               }
               benchmark={csBenchmarks.monthlyChurnRate}
@@ -287,7 +292,7 @@ export default function Page() {
               onChange={(v) =>
                 setCs({
                   ...cs,
-                  expansionRate: v
+                  expansionRate: v,
                 })
               }
               benchmark={csBenchmarks.expansionRate}
@@ -297,7 +302,10 @@ export default function Page() {
               label="NRR"
               value={cs.nrr}
               onChange={(v) =>
-                setCs({ ...cs, nrr: v })
+                setCs({
+                  ...cs,
+                  nrr: v,
+                })
               }
               benchmark={csBenchmarks.nrr}
               mode="percent"
@@ -308,7 +316,7 @@ export default function Page() {
               onChange={(v) =>
                 setCs({
                   ...cs,
-                  grossMargin: v
+                  grossMargin: v,
                 })
               }
               benchmark={csBenchmarks.grossMargin}
@@ -317,10 +325,10 @@ export default function Page() {
           </InputSection>
         </div>
 
-        {/* ARR inputs – still needed for forecasting, but small and close to the dashboard */}
+        {/* ARR INPUTS */}
         <InputSection
           title="ARR Inputs"
-          subtitle="Starting ARR and 12-month target for the forecast model."
+          subtitle="Starting ARR and 12-month target for the forecast."
         >
           <NumberInput
             label="Current ARR"
@@ -329,7 +337,7 @@ export default function Page() {
             onChange={(v) =>
               setFinance({
                 ...finance,
-                currentArr: v
+                currentArr: v,
               })
             }
           />
@@ -340,13 +348,195 @@ export default function Page() {
             onChange={(v) =>
               setFinance({
                 ...finance,
-                targetArr: v
+                targetArr: v,
               })
             }
           />
         </InputSection>
 
-        {/* Scenario planning moved to the bottom, full width */}
+        {/* BENCHMARK SETTINGS (TOGGLEABLE) */}
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">
+                Benchmarks (optional)
+              </h2>
+              <p className="text-xs text-slate-600">
+                Set your enterprise benchmarks for ACV, churn, expansion, and
+                funnel performance. These power the grey benchmark values in
+                the inputs and make the dashboard feel less SMB-ish.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setShowBenchmarkSettings((prev) => !prev)
+              }
+              className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              {showBenchmarkSettings ? "Hide" : "Adjust"}
+            </button>
+          </div>
+
+          {showBenchmarkSettings && (
+            <div className="mt-3 grid gap-4 md:grid-cols-3">
+              {/* Marketing benchmarks */}
+              <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+                <h3 className="text-xs font-semibold text-slate-800">
+                  Marketing benchmarks
+                </h3>
+                <NumberInput
+                  label="Lead → MQL target"
+                  suffix="%"
+                  value={marketingBenchmarks.mqlRate}
+                  onChange={(v) =>
+                    setMarketingBenchmarks({
+                      ...marketingBenchmarks,
+                      mqlRate: v,
+                    })
+                  }
+                />
+                <NumberInput
+                  label="MQL → SQL target"
+                  suffix="%"
+                  value={marketingBenchmarks.sqlRate}
+                  onChange={(v) =>
+                    setMarketingBenchmarks({
+                      ...marketingBenchmarks,
+                      sqlRate: v,
+                    })
+                  }
+                />
+                <NumberInput
+                  label="SQL → Opportunity target"
+                  suffix="%"
+                  value={marketingBenchmarks.oppRate}
+                  onChange={(v) =>
+                    setMarketingBenchmarks({
+                      ...marketingBenchmarks,
+                      oppRate: v,
+                    })
+                  }
+                />
+                <NumberInput
+                  label="Blended CAC target"
+                  suffix="€"
+                  value={marketingBenchmarks.blendedCAC}
+                  onChange={(v) =>
+                    setMarketingBenchmarks({
+                      ...marketingBenchmarks,
+                      blendedCAC: v,
+                    })
+                  }
+                />
+              </div>
+
+              {/* Sales benchmarks */}
+              <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+                <h3 className="text-xs font-semibold text-slate-800">
+                  Sales benchmarks
+                </h3>
+                <NumberInput
+                  label="SQL → Opp target"
+                  suffix="%"
+                  value={salesBenchmarks.sqlToOpp}
+                  onChange={(v) =>
+                    setSalesBenchmarks({
+                      ...salesBenchmarks,
+                      sqlToOpp: v,
+                    })
+                  }
+                />
+                <NumberInput
+                  label="Opp → Proposal target"
+                  suffix="%"
+                  value={salesBenchmarks.oppToProposal}
+                  onChange={(v) =>
+                    setSalesBenchmarks({
+                      ...salesBenchmarks,
+                      oppToProposal: v,
+                    })
+                  }
+                />
+                <NumberInput
+                  label="Proposal → Win target"
+                  suffix="%"
+                  value={salesBenchmarks.proposalToWin}
+                  onChange={(v) =>
+                    setSalesBenchmarks({
+                      ...salesBenchmarks,
+                      proposalToWin: v,
+                    })
+                  }
+                />
+                <NumberInput
+                  label="ACV benchmark (ASP)"
+                  suffix="€"
+                  value={salesBenchmarks.asp}
+                  onChange={(v) =>
+                    setSalesBenchmarks({
+                      ...salesBenchmarks,
+                      asp: v,
+                    })
+                  }
+                />
+              </div>
+
+              {/* CS benchmarks */}
+              <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
+                <h3 className="text-xs font-semibold text-slate-800">
+                  Churn & CS benchmarks
+                </h3>
+                <NumberInput
+                  label="Monthly churn target"
+                  suffix="%"
+                  value={csBenchmarks.monthlyChurnRate}
+                  onChange={(v) =>
+                    setCsBenchmarks({
+                      ...csBenchmarks,
+                      monthlyChurnRate: v,
+                    })
+                  }
+                />
+                <NumberInput
+                  label="Expansion target / year"
+                  suffix="%"
+                  value={csBenchmarks.expansionRate}
+                  onChange={(v) =>
+                    setCsBenchmarks({
+                      ...csBenchmarks,
+                      expansionRate: v,
+                    })
+                  }
+                />
+                <NumberInput
+                  label="NRR target"
+                  suffix="%"
+                  value={csBenchmarks.nrr}
+                  onChange={(v) =>
+                    setCsBenchmarks({
+                      ...csBenchmarks,
+                      nrr: v,
+                    })
+                  }
+                />
+                <NumberInput
+                  label="Gross margin target"
+                  suffix="%"
+                  value={csBenchmarks.grossMargin}
+                  onChange={(v) =>
+                    setCsBenchmarks({
+                      ...csBenchmarks,
+                      grossMargin: v,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* SCENARIO PLANNING AT THE BOTTOM */}
         <ScenarioPanel
           scenarios={scenarios}
           onChange={setScenarios}
