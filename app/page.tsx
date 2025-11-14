@@ -279,7 +279,11 @@ export default function Page() {
 
       {/* HERO DASHBOARD */}
       <div className="mb-6">
-        <ResultsPanel result={result} targetArr={finance.targetArr} />
+        <ResultsPanel
+  result={result}
+  currentArr={finance.currentArr}
+  targetArr={finance.targetArr}
+/>
       </div>
 
       {/* 3 COLS: Marketing, Sales, CS */}
