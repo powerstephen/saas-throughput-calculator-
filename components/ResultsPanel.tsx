@@ -21,14 +21,15 @@ function formatPct(value: number | null): string {
 export default function ResultsPanel({ result, targetArr }: Props) {
   const { funnel, forecast, efficiency, recommendations } = result;
 
-  // Net new ARR / year = new + expansion - churn
   const netNewArrYear =
-    funnel.newArr + forecast.expansionArrYear - forecast.churnedArrYear;
+    funnel.newArrAnnual +
+    forecast.expansionArrYear -
+    forecast.churnedArrYear;
 
-  // Gap to target based on 12-month forecast vs ARR target
   const arrGap = forecast.projectedArr12m - targetArr;
 
-  let coverageTone: "neutral" | "success" | "warning" | "critical" = "neutral";
+  let coverageTone: "neutral" | "success" | "warning" | "critical" =
+    "neutral";
 
   if (efficiency.pipelineCoverageStatus === "strong") coverageTone = "success";
   else if (efficiency.pipelineCoverageStatus === "ok") coverageTone = "warning";
@@ -36,20 +37,32 @@ export default function ResultsPanel({ result, targetArr }: Props) {
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-soft">
-      {/* ROW 1: Funnel throughput – hero row */}
+      {/* ROW 1: Funnel throughput */}
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Funnel Throughput
         </h2>
-        <span className="text-[11px] text-slate-500">From lead to new ARR</span>
+        <span className="text-[11px] text-slate-500">
+          Monthly funnel, annualised new ARR
+        </span>
       </div>
       <div className="mb-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <MetricTile label="MQLs" value={funnel.mqls.toFixed(0)} />
-        <MetricTile label="SQLs" value={funnel.sqls.toFixed(0)} />
-        <MetricTile label="Opportunities" value={funnel.opportunities.toFixed(0)} />
-        <MetricTile label="Proposals" value={funnel.proposals.toFixed(0)} />
-        <MetricTile label="Wins" value={funnel.wins.toFixed(0)} />
-        <MetricTile label="New ARR" value={formatCurrency(funnel.newArr)} accent="green" />
+        <MetricTile label="MQLs / month" value={funnel.mqls.toFixed(0)} />
+        <MetricTile label="SQLs / month" value={funnel.sqls.toFixed(0)} />
+        <MetricTile
+          label="Opportunities / month"
+          value={funnel.opportunities.toFixed(0)}
+        />
+        <MetricTile
+          label="Proposals / month"
+          value={funnel.proposals.toFixed(0)}
+        />
+        <MetricTile label="Wins / month" value={funnel.wins.toFixed(0)} />
+        <MetricTile
+          label="New ARR / year"
+          value={formatCurrency(funnel.newArrAnnual)}
+          accent="green"
+        />
       </div>
 
       {/* ROW 2: ARR forecast */}
@@ -57,7 +70,9 @@ export default function ResultsPanel({ result, targetArr }: Props) {
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           ARR Forecast (Current Run Rate)
         </h2>
-        <span className="text-[11px] text-slate-500">Includes churn and expansion</span>
+        <span className="text-[11px] text-slate-500">
+          Month-by-month with churn & expansion
+        </span>
       </div>
       <div className="mb-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <MetricTile
@@ -90,16 +105,39 @@ export default function ResultsPanel({ result, targetArr }: Props) {
         />
       </div>
 
+      {/* ROW 2b: Monthly flows */}
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Monthly Flow
+        </h2>
+        <span className="text-[11px] text-slate-500">
+          Approximate monthly net movement
+        </span>
+      </div>
+      <div className="mb-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-3">
+        <MetricTile
+          label="Monthly new ARR"
+          value={formatCurrency(forecast.monthlyNewArr)}
+        />
+        <MetricTile
+          label="Approx. net new ARR / month"
+          value={formatCurrency(forecast.monthlyNetNewArr)}
+          accent={forecast.monthlyNetNewArr >= 0 ? "green" : "red"}
+        />
+        <MetricTile
+          label="Gap to ARR target (12m)"
+          value={formatCurrency(arrGap)}
+          accent={arrGap >= 0 ? "green" : "red"}
+        />
+      </div>
+
       {/* ROW 3: Efficiency / risk */}
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Efficiency & Risk
+          Efficiency & Pipeline Risk
         </h2>
-        <span className="text-[11px] text-slate-500">
-          Payback, unit economics, pipeline coverage & target gap
-        </span>
       </div>
-      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricTile
           label="CAC payback"
           value={
@@ -117,7 +155,7 @@ export default function ResultsPanel({ result, targetArr }: Props) {
           value={efficiency.ltvToCac ? efficiency.ltvToCac.toFixed(1) : "-"}
         />
         <MetricTile
-          label="Pipeline coverage"
+          label="Pipeline coverage (vs required)"
           value={
             efficiency.pipelineCoverageActual !== null
               ? formatPct(efficiency.pipelineCoverageActual)
@@ -132,11 +170,6 @@ export default function ResultsPanel({ result, targetArr }: Props) {
                 : "Under"}
             </Badge>
           }
-        />
-        <MetricTile
-          label="Gap to ARR target (12m)"
-          value={formatCurrency(arrGap)}
-          accent={arrGap >= 0 ? "green" : "red"}
         />
       </div>
 
@@ -173,7 +206,9 @@ export default function ResultsPanel({ result, targetArr }: Props) {
                       : "Info"}
                   </Badge>
                 </div>
-                <p className="text-[11px] text-slate-700">{rec.message}</p>
+                <p className="text-[11px] text-slate-700">
+                  {rec.message}
+                </p>
               </div>
             );
           })}
