@@ -104,7 +104,7 @@ export default function Page() {
 
       {/* Full-funnel dashboard at the top */}
       <div className="mb-6">
-        <ResultsPanel result={result} />
+       <ResultsPanel result={result} targetArr={finance.targetArr} />
       </div>
 
       {/* Main body: three functional blocks, then ARR inputs, then scenarios */}
