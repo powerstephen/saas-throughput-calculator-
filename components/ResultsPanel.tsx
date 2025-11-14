@@ -1,10 +1,10 @@
 import { CalculatorResult } from "@/lib/calculations";
-import Badge from "./Badge";
 
 type Props = {
   result: CalculatorResult;
   currentArr: number;
   targetArr: number;
+  timeframeMonths: number;
 };
 
 function formatCurrency(value: number): string {
@@ -23,6 +23,7 @@ export default function ResultsPanel({
   result,
   currentArr,
   targetArr,
+  timeframeMonths,
 }: Props) {
   const { funnel, forecast, efficiency, recommendations } = result;
 
@@ -33,9 +34,10 @@ export default function ResultsPanel({
 
   const arrGap = forecast.projectedArr12m - targetArr;
 
-  // Run-rate logic
+  // Run-rate logic (timeframe-aware)
+  const months = timeframeMonths > 0 ? timeframeMonths : 12;
   const requiredMonthlyNetNewArr =
-    (targetArr - currentArr) / 12;
+    (targetArr - currentArr) / months;
 
   const runRateDelta =
     forecast.monthlyNetNewArr - requiredMonthlyNetNewArr;
@@ -46,8 +48,12 @@ export default function ResultsPanel({
 
   let runRateTone: "success" | "warning" | "critical" = "warning";
   if (onTrack) runRateTone = "success";
-  else if (runRateDelta < 0 && Math.abs(runRateDelta) > requiredMonthlyNetNewArr * 0.3)
+  else if (
+    runRateDelta < 0 &&
+    Math.abs(runRateDelta) > Math.abs(requiredMonthlyNetNewArr) * 0.3
+  ) {
     runRateTone = "critical";
+  }
 
   let coverageTone: "neutral" | "success" | "warning" | "critical" =
     "neutral";
@@ -64,10 +70,19 @@ export default function ResultsPanel({
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
             Topline ARR & Run Rate
           </h2>
-          <Badge tone={runRateTone}>
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+              runRateTone === "success"
+                ? "bg-emerald-500/20 text-emerald-200"
+                : runRateTone === "critical"
+                ? "bg-rose-500/20 text-rose-200"
+                : "bg-amber-400/20 text-amber-100"
+            }`}
+          >
             {onTrack ? "On track" : "Behind target"}
-          </Badge>
+          </span>
         </div>
+
         <div className="grid gap-3 sm:grid-cols-4">
           <HeroMetric
             label="Current ARR"
@@ -78,7 +93,7 @@ export default function ResultsPanel({
             value={formatCurrency(forecast.projectedArr12m)}
           />
           <HeroMetric
-            label="ARR target (12 months)"
+            label="ARR target"
             value={formatCurrency(targetArr)}
           />
           <HeroMetric
@@ -86,6 +101,36 @@ export default function ResultsPanel({
             value={formatCurrency(arrGap)}
             accent={arrGap >= 0 ? "green" : "red"}
           />
+        </div>
+
+        {/* Plain-English explanation */}
+        <div className="mt-3 rounded-lg bg-slate-800 px-3 py-2 text-[11px] text-slate-300">
+          You are adding{" "}
+          <span className="font-semibold">
+            {formatCurrency(forecast.monthlyNetNewArr)}/month
+          </span>{" "}
+          net new ARR. To hit{" "}
+          <span className="font-semibold">
+            {formatCurrency(targetArr)}
+          </span>{" "}
+          in{" "}
+          <span className="font-semibold">
+            {months} months
+          </span>
+          , you need{" "}
+          <span className="font-semibold">
+            {formatCurrency(requiredMonthlyNetNewArr)}/month
+          </span>
+          .{" "}
+          {onTrack ? (
+            <span className="text-emerald-300">
+              Your current run rate is sufficient or ahead of plan.
+            </span>
+          ) : (
+            <span className="text-amber-200">
+              Your current run rate is below what&apos;s needed to hit target in this timeframe.
+            </span>
+          )}
         </div>
       </div>
 
@@ -168,12 +213,12 @@ export default function ResultsPanel({
             Monthly Flow & Run Rate
           </h2>
           <span className="text-[11px] text-slate-500">
-            Is your current net new enough to hit the ARR target?
+            Is your current net new enough to hit the ARR target in time?
           </span>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MetricTile
-            label="Monthly new ARR (from wins)"
+            label="Monthly new ARR (wins only)"
             value={formatCurrency(forecast.monthlyNewArr)}
           />
           <MetricTile
@@ -182,7 +227,7 @@ export default function ResultsPanel({
             accent={forecast.monthlyNetNewArr >= 0 ? "green" : "red"}
           />
           <MetricTile
-            label="Required net new / month"
+            label={`Required net new / month (${months}m target)`}
             value={formatCurrency(requiredMonthlyNetNewArr)}
             accent="blue"
           />
@@ -219,20 +264,30 @@ export default function ResultsPanel({
             value={efficiency.ltvToCac ? efficiency.ltvToCac.toFixed(1) : "-"}
           />
           <MetricTile
-            label="Pipeline coverage (vs required)"
+            label="Pipeline coverage"
             value={
               efficiency.pipelineCoverageActual !== null
                 ? formatPct(efficiency.pipelineCoverageActual)
                 : "-"
             }
             rightBadge={
-              <Badge tone={coverageTone}>
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  coverageTone === "success"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : coverageTone === "warning"
+                    ? "bg-amber-100 text-amber-700"
+                    : coverageTone === "critical"
+                    ? "bg-rose-100 text-rose-700"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
                 {efficiency.pipelineCoverageStatus === "strong"
                   ? "Strong"
                   : efficiency.pipelineCoverageStatus === "ok"
                   ? "OK"
                   : "Under"}
-              </Badge>
+              </span>
             }
           />
         </div>
@@ -247,31 +302,45 @@ export default function ResultsPanel({
         </div>
         <div className="grid gap-2 lg:grid-cols-2">
           {recommendations.map((rec, idx) => {
-            const tone =
+            const borderColour =
               rec.severity === "critical"
-                ? "critical"
+                ? "border-rose-200 bg-rose-50"
                 : rec.severity === "warning"
-                ? "warning"
-                : "neutral";
+                ? "border-amber-200 bg-amber-50"
+                : "border-slate-100 bg-slate-50";
+
+            const badgeColour =
+              rec.severity === "critical"
+                ? "bg-rose-100 text-rose-700"
+                : rec.severity === "warning"
+                ? "bg-amber-100 text-amber-700"
+                : "bg-slate-100 text-slate-700";
+
+            const badgeLabel =
+              rec.severity === "critical"
+                ? "Priority"
+                : rec.severity === "warning"
+                ? "Attention"
+                : "Info";
 
             return (
               <div
                 key={idx}
-                className="flex flex-col gap-1 rounded-xl border border-slate-100 bg-slate-50 p-3"
+                className={`flex flex-col gap-1 rounded-xl border px-3 py-2.5 ${borderColour}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] font-semibold text-slate-800">
                     {rec.area}
                   </span>
-                  <Badge tone={tone as any}>
-                    {rec.severity === "critical"
-                      ? "Priority"
-                      : rec.severity === "warning"
-                      ? "Attention"
-                      : "Info"}
-                  </Badge>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${badgeColour}`}
+                  >
+                    {badgeLabel}
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-700">{rec.message}</p>
+                <p className="text-[11px] text-slate-700">
+                  {rec.message}
+                </p>
               </div>
             );
           })}
@@ -288,7 +357,12 @@ type MetricTileProps = {
   rightBadge?: React.ReactNode;
 };
 
-function MetricTile({ label, value, accent, rightBadge }: MetricTileProps) {
+function MetricTile({
+  label,
+  value,
+  accent,
+  rightBadge,
+}: MetricTileProps) {
   const accentClass =
     accent === "green"
       ? "border-emerald-100 bg-emerald-50"
@@ -312,7 +386,9 @@ function MetricTile({ label, value, accent, rightBadge }: MetricTileProps) {
       className={`flex flex-col justify-between rounded-xl border px-3 py-2.5 ${accentClass}`}
     >
       <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="text-xs font-medium text-slate-600">{label}</span>
+        <span className="text-xs font-medium text-slate-600">
+          {label}
+        </span>
         {rightBadge}
       </div>
       <div className={`text-base font-semibold leading-tight ${valueColour}`}>
