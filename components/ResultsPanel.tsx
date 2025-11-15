@@ -32,17 +32,14 @@ export default function ResultsPanel({
     forecast.expansionArrYear -
     forecast.churnedArrYear;
 
-  // Timeframe logic: convert weeks → months (approx)
   const safeWeeks = timeframeWeeks > 0 ? timeframeWeeks : 1;
-  const monthsEquivalent = safeWeeks / 4.3; // ~4.3 weeks per month
+  const monthsEquivalent = safeWeeks / 4.3;
 
-  // ARR at current run rate over the selected timeframe
   const arrAtTimeframe =
     currentArr + forecast.monthlyNetNewArr * monthsEquivalent;
 
   const gapAtTimeframe = arrAtTimeframe - targetArr;
 
-  // Run-rate logic (timeframe-aware)
   const requiredMonthlyNetNewArr =
     (targetArr - currentArr) / monthsEquivalent;
 
@@ -110,7 +107,6 @@ export default function ResultsPanel({
           />
         </div>
 
-        {/* Plain-English explanation */}
         <div className="mt-3 rounded-lg bg-slate-950/70 px-3 py-2 text-[11px] text-slate-200">
           You are adding{" "}
           <span className="font-semibold">
@@ -145,7 +141,7 @@ export default function ResultsPanel({
         </div>
       </div>
 
-      {/* ROW 1: Funnel Throughput */}
+      {/* FUNNEL THROUGHPUT */}
       <div>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
@@ -175,7 +171,7 @@ export default function ResultsPanel({
         </div>
       </div>
 
-      {/* ROW 2: ARR forecast (still 3/6/12m) */}
+      {/* ARR FORECAST */}
       <div>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
@@ -217,7 +213,7 @@ export default function ResultsPanel({
         </div>
       </div>
 
-      {/* ROW 3: Monthly Flow & Run Rate */}
+      {/* MONTHLY FLOW & RUN RATE */}
       <div>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
@@ -250,7 +246,7 @@ export default function ResultsPanel({
         </div>
       </div>
 
-      {/* ROW 4: Efficiency / Pipeline Risk */}
+      {/* EFFICIENCY & PIPELINE RISK */}
       <div>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
@@ -304,7 +300,7 @@ export default function ResultsPanel({
         </div>
       </div>
 
-      {/* ROW 5: Recommendations */}
+      {/* RECOMMENDATIONS */}
       <div>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
