@@ -27,7 +27,7 @@ export default function NumberInput({
 
   return (
     <div className="flex flex-col space-y-1">
-      <label className="text-[11px] font-semibold text-slate-200">
+      <label className="text-xs font-semibold text-slate-200">
         {label}
       </label>
 
@@ -39,11 +39,11 @@ export default function NumberInput({
           min={min}
           max={max}
           onChange={handleChange}
-          className="w-full bg-transparent text-slate-100 font-bold outline-none"
+          className="w-full bg-transparent text-slate-100 font-bold text-base outline-none"
         />
 
         {suffix && (
-          <span className="ml-1 text-[11px] font-semibold text-slate-300">
+          <span className="ml-1 text-xs font-semibold text-slate-300">
             {suffix}
           </span>
         )}
