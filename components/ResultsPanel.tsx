@@ -4,7 +4,7 @@ type Props = {
   result: CalculatorResult;
   currentArr: number;
   targetArr: number;
-  timeframeMonths: number;
+  timeframeWeeks: number;
 };
 
 function formatCurrency(value: number): string {
@@ -23,7 +23,7 @@ export default function ResultsPanel({
   result,
   currentArr,
   targetArr,
-  timeframeMonths,
+  timeframeWeeks,
 }: Props) {
   const { funnel, forecast, efficiency, recommendations } = result;
 
@@ -34,10 +34,12 @@ export default function ResultsPanel({
 
   const arrGap = forecast.projectedArr12m - targetArr;
 
-  // Run-rate logic (timeframe-aware)
-  const months = timeframeMonths > 0 ? timeframeMonths : 12;
+  // Timeframe logic: convert weeks → months (approx)
+  const safeWeeks = timeframeWeeks > 0 ? timeframeWeeks : 1;
+  const monthsEquivalent = safeWeeks / 4.3; // ~4.3 weeks per month
+
   const requiredMonthlyNetNewArr =
-    (targetArr - currentArr) / months;
+    (targetArr - currentArr) / monthsEquivalent;
 
   const runRateDelta =
     forecast.monthlyNetNewArr - requiredMonthlyNetNewArr;
@@ -115,7 +117,7 @@ export default function ResultsPanel({
           </span>{" "}
           in{" "}
           <span className="font-semibold">
-            {months} months
+            {safeWeeks} weeks
           </span>
           , you need{" "}
           <span className="font-semibold">
@@ -227,7 +229,7 @@ export default function ResultsPanel({
             accent={forecast.monthlyNetNewArr >= 0 ? "green" : "red"}
           />
           <MetricTile
-            label={`Required net new / month (${months}m target)`}
+            label={`Required net new / month (${safeWeeks}w target)`}
             value={formatCurrency(requiredMonthlyNetNewArr)}
             accent="blue"
           />
