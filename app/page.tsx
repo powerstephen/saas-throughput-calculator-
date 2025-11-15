@@ -52,7 +52,7 @@ export default function Page() {
     targetArr: 2500000,
   });
 
-  // Timeframe in WEEKS for target (more granular)
+  // Timeframe in WEEKS for ARR target
   const [timeframeWeeks, setTimeframeWeeks] = useState<number>(52);
 
   const [scenarios, setScenarios] = useState<ScenarioAdjustments>({
@@ -97,28 +97,32 @@ export default function Page() {
     [marketing, sales, cs, finance, scenarios]
   );
 
+  // ------------------------
+  // PAGE LAYOUT
+  // ------------------------
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       {/* HEADER */}
       <header className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
         {/* LEFT: Logo + Title */}
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           {/* Logo */}
           <img
             src="/power-logo.png"
             alt="Dashboard logo"
-            className="mt-0.5 h-12 w-12 rounded-xl border border-slate-200 bg-white object-contain shadow-sm"
+            className="mt-0.5 h-20 w-20 rounded-2xl border border-slate-200 bg-white object-contain shadow-sm"
           />
 
           {/* Title + Subtitle */}
           <div className="space-y-1">
             <div>
-              <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
+              <h1 className="text-3xl font-semibold text-slate-900">
                 SaaS Revenue Engine Dashboard
               </h1>
 
               {/* Accent bar under title */}
-              <div className="mt-1 h-1 w-16 rounded-full bg-sky-500" />
+              <div className="mt-1 h-1 w-20 rounded-full bg-sky-500" />
             </div>
 
             <p className="max-w-3xl text-sm text-slate-600">
@@ -139,177 +143,131 @@ export default function Page() {
         </div>
       </header>
 
-      {/* BENCHMARK DROPDOWN UNDER HEADER */}
+      {/* BENCHMARK DROPDOWN */}
       {showBenchmarkSettings && (
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
           <div className="mb-3">
             <h2 className="text-sm font-semibold text-slate-900">Benchmarks</h2>
             <p className="text-xs text-slate-600">
-              Enterprise benchmarks for ACV, churn, conversion performance, and ARR target
-              timeframe. These drive the grey benchmark hints in the inputs and the run-rate
-              diagnostics in the dashboard.
+              These benchmarks drive all diagnostic colour-coding and run-rate comparisons.
             </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-4">
-            {/* Marketing benchmarks */}
-            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-              <h3 className="text-xs font-semibold text-slate-800">Marketing</h3>
+            {/* MARKETING BENCHMARKS */}
+            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <h3 className="text-xs font-semibold text-slate-700">Marketing</h3>
               <NumberInput
                 label="Lead → MQL target"
                 suffix="%"
                 value={marketingBenchmarks.mqlRate}
-                onChange={(v) =>
-                  setMarketingBenchmarks({ ...marketingBenchmarks, mqlRate: v })
-                }
+                onChange={(v) => setMarketingBenchmarks({ ...marketingBenchmarks, mqlRate: v })}
               />
               <NumberInput
                 label="MQL → SQL target"
                 suffix="%"
                 value={marketingBenchmarks.sqlRate}
-                onChange={(v) =>
-                  setMarketingBenchmarks({ ...marketingBenchmarks, sqlRate: v })
-                }
+                onChange={(v) => setMarketingBenchmarks({ ...marketingBenchmarks, sqlRate: v })}
               />
               <NumberInput
                 label="SQL → Opp target"
                 suffix="%"
                 value={marketingBenchmarks.oppRate}
-                onChange={(v) =>
-                  setMarketingBenchmarks({ ...marketingBenchmarks, oppRate: v })
-                }
+                onChange={(v) => setMarketingBenchmarks({ ...marketingBenchmarks, oppRate: v })}
               />
               <NumberInput
                 label="Blended CAC target"
                 suffix="€"
                 value={marketingBenchmarks.blendedCAC}
-                onChange={(v) =>
-                  setMarketingBenchmarks({
-                    ...marketingBenchmarks,
-                    blendedCAC: v,
-                  })
-                }
+                onChange={(v) => setMarketingBenchmarks({ ...marketingBenchmarks, blendedCAC: v })}
               />
             </div>
 
-            {/* Sales benchmarks */}
-            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-              <h3 className="text-xs font-semibold text-slate-800">Sales</h3>
+            {/* SALES BENCHMARKS */}
+            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <h3 className="text-xs font-semibold text-slate-700">Sales</h3>
               <NumberInput
                 label="SQL → Opp target"
                 suffix="%"
                 value={salesBenchmarks.sqlToOpp}
-                onChange={(v) =>
-                  setSalesBenchmarks({ ...salesBenchmarks, sqlToOpp: v })
-                }
+                onChange={(v) => setSalesBenchmarks({ ...salesBenchmarks, sqlToOpp: v })}
               />
               <NumberInput
                 label="Opp → Proposal target"
                 suffix="%"
                 value={salesBenchmarks.oppToProposal}
-                onChange={(v) =>
-                  setSalesBenchmarks({
-                    ...salesBenchmarks,
-                    oppToProposal: v,
-                  })
-                }
+                onChange={(v) => setSalesBenchmarks({ ...salesBenchmarks, oppToProposal: v })}
               />
               <NumberInput
                 label="Proposal → Win target"
                 suffix="%"
                 value={salesBenchmarks.proposalToWin}
-                onChange={(v) =>
-                  setSalesBenchmarks({
-                    ...salesBenchmarks,
-                    proposalToWin: v,
-                  })
-                }
+                onChange={(v) => setSalesBenchmarks({ ...salesBenchmarks, proposalToWin: v })}
               />
               <NumberInput
                 label="ACV target"
                 suffix="€"
                 value={salesBenchmarks.asp}
-                onChange={(v) =>
-                  setSalesBenchmarks({ ...salesBenchmarks, asp: v })
-                }
+                onChange={(v) => setSalesBenchmarks({ ...salesBenchmarks, asp: v })}
               />
             </div>
 
-            {/* CS benchmarks */}
-            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-              <h3 className="text-xs font-semibold text-slate-800">
-                Customer Success
-              </h3>
+            {/* CS BENCHMARKS */}
+            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <h3 className="text-xs font-semibold text-slate-700">CS</h3>
               <NumberInput
                 label="Monthly churn target"
                 suffix="%"
                 value={csBenchmarks.monthlyChurnRate}
-                onChange={(v) =>
-                  setCsBenchmarks({
-                    ...csBenchmarks,
-                    monthlyChurnRate: v,
-                  })
-                }
+                onChange={(v) => setCsBenchmarks({ ...csBenchmarks, monthlyChurnRate: v })}
               />
               <NumberInput
                 label="Expansion target"
                 suffix="%"
                 value={csBenchmarks.expansionRate}
-                onChange={(v) =>
-                  setCsBenchmarks({ ...csBenchmarks, expansionRate: v })
-                }
+                onChange={(v) => setCsBenchmarks({ ...csBenchmarks, expansionRate: v })}
               />
               <NumberInput
                 label="NRR target"
                 suffix="%"
                 value={csBenchmarks.nrr}
-                onChange={(v) =>
-                  setCsBenchmarks({ ...csBenchmarks, nrr: v })
-                }
+                onChange={(v) => setCsBenchmarks({ ...csBenchmarks, nrr: v })}
               />
               <NumberInput
-                label="Gross Margin target"
+                label="Gross margin target"
                 suffix="%"
                 value={csBenchmarks.grossMargin}
-                onChange={(v) =>
-                  setCsBenchmarks({ ...csBenchmarks, grossMargin: v })
-                }
+                onChange={(v) => setCsBenchmarks({ ...csBenchmarks, grossMargin: v })}
               />
             </div>
 
-            {/* ARR + timeframe (weeks) */}
-            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-              <h3 className="text-xs font-semibold text-slate-800">ARR Target</h3>
+            {/* ARR + TIMEFRAME */}
+            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <h3 className="text-xs font-semibold text-slate-700">ARR Target</h3>
               <NumberInput
                 label="Current ARR"
                 suffix="€"
                 value={finance.currentArr}
-                onChange={(v) =>
-                  setFinance({ ...finance, currentArr: v })
-                }
+                onChange={(v) => setFinance({ ...finance, currentArr: v })}
               />
               <NumberInput
                 label="ARR target"
                 suffix="€"
                 value={finance.targetArr}
-                onChange={(v) =>
-                  setFinance({ ...finance, targetArr: v })
-                }
+                onChange={(v) => setFinance({ ...finance, targetArr: v })}
               />
               <NumberInput
-                label="Timeframe to target"
+                label="Timeframe"
                 suffix="weeks"
                 value={timeframeWeeks}
-                onChange={(v) =>
-                  setTimeframeWeeks(v > 0 ? v : 1)
-                }
+                onChange={(v) => setTimeframeWeeks(v > 0 ? v : 1)}
               />
             </div>
           </div>
         </section>
       )}
 
-      {/* HERO DASHBOARD */}
+      {/* HERO RESULTS */}
       <div className="mb-6">
         <ResultsPanel
           result={result}
@@ -319,57 +277,45 @@ export default function Page() {
         />
       </div>
 
-      {/* 3 COLS: Marketing, Sales, CS */}
+      {/* 3 COLUMN INPUTS */}
       <div className="grid gap-4 lg:grid-cols-3">
         {/* MARKETING */}
         <InputSection title="Marketing" subtitle="Acquisition health (monthly).">
           <NumberInput
             label="Website traffic"
             value={marketing.traffic}
-            onChange={(v) =>
-              setMarketing({ ...marketing, traffic: v })
-            }
+            onChange={(v) => setMarketing({ ...marketing, traffic: v })}
           />
           <NumberInput
             label="Leads per month"
             value={marketing.leads}
-            onChange={(v) =>
-              setMarketing({ ...marketing, leads: v })
-            }
+            onChange={(v) => setMarketing({ ...marketing, leads: v })}
           />
           <MetricInputWithBenchmark
             label="Lead → MQL"
             value={marketing.mqlRate}
-            onChange={(v) =>
-              setMarketing({ ...marketing, mqlRate: v })
-            }
+            onChange={(v) => setMarketing({ ...marketing, mqlRate: v })}
             benchmark={marketingBenchmarks.mqlRate}
             mode="percent"
           />
           <MetricInputWithBenchmark
             label="MQL → SQL"
             value={marketing.sqlRate}
-            onChange={(v) =>
-              setMarketing({ ...marketing, sqlRate: v })
-            }
+            onChange={(v) => setMarketing({ ...marketing, sqlRate: v })}
             benchmark={marketingBenchmarks.sqlRate}
             mode="percent"
           />
           <MetricInputWithBenchmark
             label="SQL → Opportunity"
             value={marketing.oppRate}
-            onChange={(v) =>
-              setMarketing({ ...marketing, oppRate: v })
-            }
+            onChange={(v) => setMarketing({ ...marketing, oppRate: v })}
             benchmark={marketingBenchmarks.oppRate}
             mode="percent"
           />
           <MetricInputWithBenchmark
             label="Blended CAC"
             value={marketing.blendedCAC}
-            onChange={(v) =>
-              setMarketing({ ...marketing, blendedCAC: v })
-            }
+            onChange={(v) => setMarketing({ ...marketing, blendedCAC: v })}
             benchmark={marketingBenchmarks.blendedCAC}
             mode="currency"
           />
@@ -380,27 +326,21 @@ export default function Page() {
           <MetricInputWithBenchmark
             label="Opp → Proposal"
             value={sales.oppToProposal}
-            onChange={(v) =>
-              setSales({ ...sales, oppToProposal: v })
-            }
+            onChange={(v) => setSales({ ...sales, oppToProposal: v })}
             benchmark={salesBenchmarks.oppToProposal}
             mode="percent"
           />
           <MetricInputWithBenchmark
             label="Proposal → Win"
             value={sales.proposalToWin}
-            onChange={(v) =>
-              setSales({ ...sales, proposalToWin: v })
-            }
+            onChange={(v) => setSales({ ...sales, proposalToWin: v })}
             benchmark={salesBenchmarks.proposalToWin}
             mode="percent"
           />
           <MetricInputWithBenchmark
             label="ACV (ASP)"
             value={sales.asp}
-            onChange={(v) =>
-              setSales({ ...sales, asp: v })
-            }
+            onChange={(v) => setSales({ ...sales, asp: v })}
             benchmark={salesBenchmarks.asp}
             mode="currency"
           />
@@ -408,26 +348,20 @@ export default function Page() {
             label="Sales cycle"
             suffix="days"
             value={sales.salesCycleDays}
-            onChange={(v) =>
-              setSales({ ...sales, salesCycleDays: v })
-            }
+            onChange={(v) => setSales({ ...sales, salesCycleDays: v })}
           />
           <NumberInput
             label="Open pipeline value"
             suffix="€"
             value={sales.openPipelineValue}
-            onChange={(v) =>
-              setSales({ ...sales, openPipelineValue: v })
-            }
+            onChange={(v) => setSales({ ...sales, openPipelineValue: v })}
           />
           <NumberInput
             label="Pipeline coverage target"
             suffix="×"
             value={sales.pipelineCoverageTarget}
             step={0.5}
-            onChange={(v) =>
-              setSales({ ...sales, pipelineCoverageTarget: v })
-            }
+            onChange={(v) => setSales({ ...sales, pipelineCoverageTarget: v })}
           />
         </InputSection>
 
@@ -436,46 +370,38 @@ export default function Page() {
           <MetricInputWithBenchmark
             label="Monthly churn rate"
             value={cs.monthlyChurnRate}
-            onChange={(v) =>
-              setCs({ ...cs, monthlyChurnRate: v })
-            }
+            onChange={(v) => setCs({ ...cs, monthlyChurnRate: v })}
             benchmark={csBenchmarks.monthlyChurnRate}
             mode="percent"
           />
           <MetricInputWithBenchmark
             label="Expansion rate"
             value={cs.expansionRate}
-            onChange={(v) =>
-              setCs({ ...cs, expansionRate: v })
-            }
+            onChange={(v) => setCs({ ...cs, expansionRate: v })}
             benchmark={csBenchmarks.expansionRate}
             mode="percent"
           />
           <MetricInputWithBenchmark
             label="NRR"
             value={cs.nrr}
-            onChange={(v) =>
-              setCs({ ...cs, nrr: v })
-            }
+            onChange={(v) => setCs({ ...cs, nrr: v })}
             benchmark={csBenchmarks.nrr}
             mode="percent"
           />
           <MetricInputWithBenchmark
             label="Gross Margin %"
             value={cs.grossMargin}
-            onChange={(v) =>
-              setCs({ ...cs, grossMargin: v })
-            }
+            onChange={(v) => setCs({ ...cs, grossMargin: v })}
             benchmark={csBenchmarks.grossMargin}
             mode="percent"
           />
         </InputSection>
       </div>
 
-      {/* SCENARIO AT BOTTOM */}
+      {/* SCENARIO PLANNING */}
       <InputSection
         title="Scenario Planning"
-        subtitle="Dial up conversion rates, reduce churn, or increase ACV and see immediate impact on the forecast above."
+        subtitle="Dial up conversion rates, reduce churn, or increase ACV and see the impact instantly."
       >
         <ScenarioPanel scenarios={scenarios} onChange={setScenarios} />
       </InputSection>
