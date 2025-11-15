@@ -103,40 +103,29 @@ export default function Page() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      {/* HEADER */}
-      <header className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* LEFT: Logo + Title */}
-        <div className="flex items-start gap-4">
-          {/* Logo */}
+      {/* HEADER (CENTERED) */}
+      <header className="mb-8 border-b border-slate-200 pb-6">
+        <div className="flex flex-col items-center text-center">
           <img
             src="/power-logo.png"
             alt="Dashboard logo"
-            className="mt-0.5 h-20 w-20 rounded-2xl border border-slate-200 bg-white object-contain shadow-sm"
+            className="mb-3 h-24 w-24 rounded-2xl border border-slate-200 bg-white object-contain shadow-sm"
           />
 
-          {/* Title + Subtitle */}
-          <div className="space-y-1">
-            <div>
-              <h1 className="text-3xl font-semibold text-slate-900">
-                SaaS Revenue Engine Dashboard
-              </h1>
+          <h1 className="text-4xl font-bold text-slate-900">
+            SaaS Revenue Engine Dashboard
+          </h1>
 
-              {/* Accent bar under title */}
-              <div className="mt-1 h-1 w-20 rounded-full bg-sky-500" />
-            </div>
+          <div className="mt-2 h-1 w-24 rounded-full bg-sky-500" />
 
-            <p className="max-w-3xl text-sm text-slate-600">
-              Key Metrics: Throughput, ARR Run Rate, Full-Funnel Performance & Forecast Intelligence
-            </p>
-          </div>
-        </div>
+          <p className="mt-3 max-w-2xl text-base font-medium text-slate-600">
+            Key Metrics: Throughput, ARR Run Rate, Full-Funnel Performance & Forecast Intelligence
+          </p>
 
-        {/* RIGHT: Benchmarks Button */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             type="button"
             onClick={() => setShowBenchmarkSettings((prev) => !prev)}
-            className="rounded-full border border-slate-300 px-4 py-2 text-xs font-medium text-slate-800 shadow-sm hover:bg-slate-50"
+            className="mt-4 rounded-full border border-slate-300 px-5 py-2 text-xs font-medium text-slate-800 shadow-sm hover:bg-slate-50"
           >
             {showBenchmarkSettings ? "Hide benchmarks" : "Adjust benchmarks"}
           </button>
@@ -149,7 +138,7 @@ export default function Page() {
           <div className="mb-3">
             <h2 className="text-sm font-semibold text-slate-900">Benchmarks</h2>
             <p className="text-xs text-slate-600">
-              These benchmarks drive all diagnostic colour-coding and run-rate comparisons.
+              These benchmarks drive diagnostic colour-coding and run-rate comparisons.
             </p>
           </div>
 
