@@ -34,6 +34,14 @@ export type ScenarioAdjustments = {
   aspIncreasePct: number; // %
 };
 
+export type Recommendation = {
+  area: string;
+  message: string;
+  severity: "info" | "warning" | "critical";
+  impactArr?: number;
+  score?: number;
+};
+
 export type CalculatorResult = {
   funnel: {
     mqls: number;
@@ -59,11 +67,9 @@ export type CalculatorResult = {
     pipelineCoverageActual: number | null; // 1.0 = 100% of target
     pipelineCoverageStatus: "strong" | "ok" | "under";
   };
-  recommendations: {
-    area: string;
-    message: string;
-    severity: "info" | "warning" | "critical";
-  }[];
+  recommendations: Recommendation[];
+  priorities: Recommendation[];
+  otherFindings: Recommendation[];
 };
 
 // ---------- helpers ----------
@@ -226,50 +232,148 @@ export function calculateAll(
 
   // -------- recommendations & ARR uplift --------
 
-  type Recommendation = {
-    area: string;
-    message: string;
-    severity: "info" | "warning" | "critical";
-  };
-
   const recommendations: Recommendation[] = [];
 
-  // --- 1) Proposal → Win severity + ARR uplift ---
+  // Helper to compute ARR uplift when a specific conversion step is set to a benchmark
+  function upliftForStep(
+    overrides: {
+      sqlRatePct?: number;
+      oppRatePct?: number;
+      oppToProposalPct?: number;
+      proposalToWinPct?: number;
+    }
+  ): number {
+    const sqlRate = overrides.sqlRatePct ?? sqlRateEff;
+    const oppRate = overrides.oppRatePct ?? oppRateEff;
+    const oppToProp = overrides.oppToProposalPct ?? oppToProposalEff;
+    const propToWin = overrides.proposalToWinPct ?? proposalToWinEff;
 
+    const mqlsAdj = mqls; // mqls already uses mqlRateEff
+    const sqlsAdj = mqlsAdj * (sqlRate / 100);
+    const oppsAdj = sqlsAdj * (oppRate / 100);
+    const proposalsAdj = oppsAdj * (oppToProp / 100);
+    const winsAdj = proposalsAdj * (propToWin / 100);
+
+    const monthlyNewArrAdj = winsAdj * aspEff;
+    const newArrAnnualAdj = monthlyNewArrAdj * 12;
+    return newArrAnnualAdj - newArrAnnual;
+  }
+
+  // --- MQL → SQL severity + ARR uplift ---
+
+  const mqlToSqlBenchmarkEff = marketingBenchmarks.sqlRate * convFactor;
+  const mqlToSqlSeverity = severityFromGap(
+    sqlRateEff,
+    mqlToSqlBenchmarkEff
+  );
+
+  if (mqlToSqlSeverity) {
+    const upliftArr = upliftForStep({
+      sqlRatePct: mqlToSqlBenchmarkEff,
+    });
+
+    recommendations.push({
+      area: "Funnel · MQL → SQL",
+      severity: mqlToSqlSeverity,
+      impactArr: upliftArr > 0 ? upliftArr : 0,
+      message: `MQL → SQL is at ${sqlRateEff.toFixed(
+        1
+      )}% vs a benchmark of ${mqlToSqlBenchmarkEff.toFixed(
+        1
+      )}%. Fixing this step could unlock roughly ${formatCurrencyFull(
+        Math.max(upliftArr, 0),
+        currencySymbol
+      )} in additional new ARR per year at current lead volume.`,
+    });
+  }
+
+  // --- SQL → Opportunity severity + ARR uplift ---
+
+  const sqlToOppBenchmarkEff = marketingBenchmarks.oppRate * convFactor;
+  const sqlToOppSeverity = severityFromGap(
+    oppRateEff,
+    sqlToOppBenchmarkEff
+  );
+
+  if (sqlToOppSeverity) {
+    const upliftArr = upliftForStep({
+      oppRatePct: sqlToOppBenchmarkEff,
+    });
+
+    recommendations.push({
+      area: "Funnel · SQL → Opportunity",
+      severity: sqlToOppSeverity,
+      impactArr: upliftArr > 0 ? upliftArr : 0,
+      message: `SQL → Opportunity is at ${oppRateEff.toFixed(
+        1
+      )}% vs a benchmark of ${sqlToOppBenchmarkEff.toFixed(
+        1
+      )}%. Improving discovery and qualification here could unlock around ${formatCurrencyFull(
+        Math.max(upliftArr, 0),
+        currencySymbol
+      )} in new ARR per year.`,
+    });
+  }
+
+  // --- Opportunity → Proposal severity + ARR uplift ---
+
+  const oppToProposalBenchmarkEff =
+    salesBenchmarks.oppToProposal * convFactor;
+  const oppToProposalSeverity = severityFromGap(
+    oppToProposalEff,
+    oppToProposalBenchmarkEff
+  );
+
+  if (oppToProposalSeverity) {
+    const upliftArr = upliftForStep({
+      oppToProposalPct: oppToProposalBenchmarkEff,
+    });
+
+    recommendations.push({
+      area: "Sales · Opportunity → Proposal",
+      severity: oppToProposalSeverity,
+      impactArr: upliftArr > 0 ? upliftArr : 0,
+      message: `Opportunity → Proposal is at ${oppToProposalEff.toFixed(
+        1
+      )}% vs a benchmark of ${oppToProposalBenchmarkEff.toFixed(
+        1
+      )}%. Sharpening proposals and solution fit here could generate about ${formatCurrencyFull(
+        Math.max(upliftArr, 0),
+        currencySymbol
+      )} in additional new ARR per year.`,
+    });
+  }
+
+  // --- Proposal → Win severity + ARR uplift ---
+
+  const proposalWinBenchmarkEff =
+    salesBenchmarks.proposalToWin * convFactor;
   const proposalSeverity = severityFromGap(
     proposalToWinEff,
-    salesBenchmarks.proposalToWin
+    proposalWinBenchmarkEff
   );
 
   if (proposalSeverity) {
-    const proposalWinBenchmarkEff =
-      salesBenchmarks.proposalToWin * convFactor;
-
-    const winsIfBenchmark = proposals * (proposalWinBenchmarkEff / 100);
-
-    const annualNewArrIfBenchmark = winsIfBenchmark * aspEff * 12;
-    const upliftArr = annualNewArrIfBenchmark - newArrAnnual;
-
-    const upliftText =
-      upliftArr > 0
-        ? `Fixing this could unlock roughly ${formatCurrencyFull(
-            upliftArr,
-            currencySymbol
-          )} in additional new ARR per year at your current volume.`
-        : `This step is still constraining your funnel even at current volumes.`;
+    const upliftArr = upliftForStep({
+      proposalToWinPct: proposalWinBenchmarkEff,
+    });
 
     recommendations.push({
       area: "Sales · Proposal → Win",
       severity: proposalSeverity,
+      impactArr: upliftArr > 0 ? upliftArr : 0,
       message: `Proposal → Win is at ${proposalToWinEff.toFixed(
         1
-      )}% vs a benchmark of ${salesBenchmarks.proposalToWin.toFixed(
+      )}% vs a benchmark of ${proposalWinBenchmarkEff.toFixed(
         1
-      )}%. ${upliftText}`,
+      )}%. Fixing this closing step could unlock roughly ${formatCurrencyFull(
+        Math.max(upliftArr, 0),
+        currencySymbol
+      )} in additional new ARR per year.`,
     });
   }
 
-  // --- 2) Monthly churn severity + churn impact ---
+  // --- Monthly churn severity + churn impact ---
 
   const churnSeverity = severityFromGap(
     monthlyChurnEff,
@@ -284,26 +388,22 @@ export function calculateAll(
     const churnedIfBenchmark = finance.currentArr * annualChurnRateBenchmark;
     const churnReduction = churnedArrYear - churnedIfBenchmark;
 
-    const churnText =
-      churnReduction > 0
-        ? `At your current ARR, improving churn to benchmark would reduce churned ARR by about ${formatCurrencyFull(
-            churnReduction,
-            currencySymbol
-          )} per year.`
-        : `Current churn is above ideal and will drag down long-term ARR if left as is.`;
-
     recommendations.push({
       area: "Customer Success · Churn",
       severity: churnSeverity,
+      impactArr: churnReduction > 0 ? churnReduction : 0,
       message: `Monthly churn is effectively ${monthlyChurnEff.toFixed(
         2
       )}% vs a benchmark of ${csBenchmarks.monthlyChurnRate.toFixed(
         2
-      )}%. ${churnText}`,
+      )}%. Improving retention to benchmark would reduce churned ARR by about ${formatCurrencyFull(
+        Math.max(churnReduction, 0),
+        currencySymbol
+      )} per year.`,
     });
   }
 
-  // --- 3) CAC severity ---
+  // --- CAC severity (no direct ARR uplift, but still important) ---
 
   const cacSeverity = severityFromGap(
     marketing.blendedCAC,
@@ -315,6 +415,7 @@ export function calculateAll(
     recommendations.push({
       area: "Marketing · CAC",
       severity: cacSeverity,
+      impactArr: 0,
       message: `Blended CAC is ${formatCurrencyFull(
         marketing.blendedCAC,
         currencySymbol
@@ -325,28 +426,59 @@ export function calculateAll(
     });
   }
 
-  // --- 4) Pipeline coverage severity ---
+  // --- Pipeline coverage severity (again, no direct ARR uplift calc here) ---
 
   if (pipelineCoverageActual !== null && pipelineCoverageStatus === "under") {
     recommendations.push({
       area: "Sales · Pipeline Coverage",
       severity: "critical",
+      impactArr: 0,
       message: `Pipeline coverage is below target. You currently have about ${(pipelineCoverageActual * 100).toFixed(
         0
-      )}% of the pipeline value you’d like for your coverage multiple. This is a leading indicator that future ARR will fall short unless you increase pipeline or improve win rates.`,
+      )}% of the pipeline value you'd like for your coverage multiple. This is a leading indicator that future ARR will fall short unless you increase pipeline or improve win rates.`,
     });
   }
 
-  // --- 5) If nothing major, add a general info note ---
+  // --- If nothing major, add a general info note ---
 
   if (recommendations.length === 0) {
     recommendations.push({
       area: "Overview",
       severity: "info",
+      impactArr: 0,
       message:
         "No major bottlenecks against your current benchmarks. Use scenario planning to test where additional lift (conversion, churn, ACV) has the biggest impact on ARR.",
     });
   }
+
+  // -------- score & split into priorities + other findings --------
+
+  const scoredRecs: Recommendation[] = recommendations.map((rec) => {
+    let severityWeight = 1;
+    if (rec.severity === "warning") severityWeight = 2;
+    if (rec.severity === "critical") severityWeight = 3;
+
+    const impact = rec.impactArr ?? 0;
+
+    // If we have ARR impact, use it. Otherwise, fallback to a base score by severity.
+    const baseForNoImpact =
+      rec.severity === "critical"
+        ? 1_000_000
+        : rec.severity === "warning"
+        ? 100_000
+        : 10_000;
+
+    const score = impact > 0 ? impact * severityWeight : baseForNoImpact;
+
+    return { ...rec, score };
+  });
+
+  const sorted = [...scoredRecs].sort(
+    (a, b) => (b.score ?? 0) - (a.score ?? 0)
+  );
+
+  const priorities = sorted.slice(0, 2);
+  const otherFindings = sorted.slice(2);
 
   // -------- return full object --------
 
@@ -375,6 +507,8 @@ export function calculateAll(
       pipelineCoverageActual,
       pipelineCoverageStatus,
     },
-    recommendations,
+    recommendations: sorted,
+    priorities,
+    otherFindings,
   };
 }
