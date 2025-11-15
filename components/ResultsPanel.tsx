@@ -32,12 +32,17 @@ export default function ResultsPanel({
     forecast.expansionArrYear -
     forecast.churnedArrYear;
 
-  const arrGap = forecast.projectedArr12m - targetArr;
-
   // Timeframe logic: convert weeks → months (approx)
   const safeWeeks = timeframeWeeks > 0 ? timeframeWeeks : 1;
   const monthsEquivalent = safeWeeks / 4.3; // ~4.3 weeks per month
 
+  // ARR at current run rate over the selected timeframe
+  const arrAtTimeframe =
+    currentArr + forecast.monthlyNetNewArr * monthsEquivalent;
+
+  const gapAtTimeframe = arrAtTimeframe - targetArr;
+
+  // Run-rate logic (timeframe-aware)
   const requiredMonthlyNetNewArr =
     (targetArr - currentArr) / monthsEquivalent;
 
@@ -45,7 +50,7 @@ export default function ResultsPanel({
     forecast.monthlyNetNewArr - requiredMonthlyNetNewArr;
 
   const onTrack =
-    forecast.projectedArr12m >= targetArr ||
+    arrAtTimeframe >= targetArr ||
     forecast.monthlyNetNewArr >= requiredMonthlyNetNewArr;
 
   let runRateTone: "success" | "warning" | "critical" = "warning";
@@ -65,19 +70,19 @@ export default function ResultsPanel({
   else if (efficiency.pipelineCoverageStatus === "under") coverageTone = "critical";
 
   return (
-    <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-soft">
+    <section className="space-y-5 rounded-2xl border border-slate-800 bg-slate-900 p-5 text-slate-50 shadow-soft">
       {/* TOPLINE: ARR & RUN RATE */}
-      <div className="rounded-2xl bg-slate-900 px-4 py-3 text-slate-50">
+      <div className="rounded-2xl bg-sky-900 px-4 py-3 text-slate-50">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
-            Topline ARR & Run Rate
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-200">
+            Top Results · ARR & Run Rate
           </h2>
           <span
             className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
               runRateTone === "success"
-                ? "bg-emerald-500/20 text-emerald-200"
+                ? "bg-emerald-500/20 text-emerald-100"
                 : runRateTone === "critical"
-                ? "bg-rose-500/20 text-rose-200"
+                ? "bg-rose-500/20 text-rose-100"
                 : "bg-amber-400/20 text-amber-100"
             }`}
           >
@@ -91,41 +96,45 @@ export default function ResultsPanel({
             value={formatCurrency(currentArr)}
           />
           <HeroMetric
-            label="ARR in 12 months (run rate)"
-            value={formatCurrency(forecast.projectedArr12m)}
+            label={`ARR at run rate (${safeWeeks}w)`}
+            value={formatCurrency(arrAtTimeframe)}
           />
           <HeroMetric
             label="ARR target"
             value={formatCurrency(targetArr)}
           />
           <HeroMetric
-            label="Gap to target (12m)"
-            value={formatCurrency(arrGap)}
-            accent={arrGap >= 0 ? "green" : "red"}
+            label={`Gap to target (${safeWeeks}w)`}
+            value={formatCurrency(gapAtTimeframe)}
+            accent={gapAtTimeframe >= 0 ? "green" : "red"}
           />
         </div>
 
         {/* Plain-English explanation */}
-        <div className="mt-3 rounded-lg bg-slate-800 px-3 py-2 text-[11px] text-slate-300">
+        <div className="mt-3 rounded-lg bg-slate-950/70 px-3 py-2 text-[11px] text-slate-200">
           You are adding{" "}
           <span className="font-semibold">
             {formatCurrency(forecast.monthlyNetNewArr)}/month
           </span>{" "}
-          net new ARR. To hit{" "}
+          net new ARR. At that run rate, you reach{" "}
           <span className="font-semibold">
-            {formatCurrency(targetArr)}
+            {formatCurrency(arrAtTimeframe)}
           </span>{" "}
           in{" "}
           <span className="font-semibold">
             {safeWeeks} weeks
           </span>
-          , you need{" "}
+          . To hit{" "}
+          <span className="font-semibold">
+            {formatCurrency(targetArr)}
+          </span>{" "}
+          in that timeframe, you need{" "}
           <span className="font-semibold">
             {formatCurrency(requiredMonthlyNetNewArr)}/month
           </span>
           .{" "}
           {onTrack ? (
-            <span className="text-emerald-300">
+            <span className="text-emerald-200">
               Your current run rate is sufficient or ahead of plan.
             </span>
           ) : (
@@ -139,10 +148,10 @@ export default function ResultsPanel({
       {/* ROW 1: Funnel Throughput */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
             Funnel Throughput
           </h2>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-slate-400">
             Monthly funnel, annualised new ARR
           </span>
         </div>
@@ -166,13 +175,13 @@ export default function ResultsPanel({
         </div>
       </div>
 
-      {/* ROW 2: ARR forecast */}
+      {/* ROW 2: ARR forecast (still 3/6/12m) */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            ARR Forecast (Current Run Rate)
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+            ARR Forecast · Current Run Rate
           </h2>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-slate-400">
             Includes churn & expansion
           </span>
         </div>
@@ -211,10 +220,10 @@ export default function ResultsPanel({
       {/* ROW 3: Monthly Flow & Run Rate */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
             Monthly Flow & Run Rate
           </h2>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-slate-400">
             Is your current net new enough to hit the ARR target in time?
           </span>
         </div>
@@ -244,7 +253,7 @@ export default function ResultsPanel({
       {/* ROW 4: Efficiency / Pipeline Risk */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
             Efficiency & Pipeline Risk
           </h2>
         </div>
@@ -276,12 +285,12 @@ export default function ResultsPanel({
               <span
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                   coverageTone === "success"
-                    ? "bg-emerald-100 text-emerald-700"
+                    ? "bg-emerald-500/20 text-emerald-100"
                     : coverageTone === "warning"
-                    ? "bg-amber-100 text-amber-700"
+                    ? "bg-amber-500/20 text-amber-100"
                     : coverageTone === "critical"
-                    ? "bg-rose-100 text-rose-700"
-                    : "bg-slate-100 text-slate-600"
+                    ? "bg-rose-500/20 text-rose-100"
+                    : "bg-slate-500/30 text-slate-100"
                 }`}
               >
                 {efficiency.pipelineCoverageStatus === "strong"
@@ -298,7 +307,7 @@ export default function ResultsPanel({
       {/* ROW 5: Recommendations */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
             Recommendations
           </h2>
         </div>
@@ -306,17 +315,17 @@ export default function ResultsPanel({
           {recommendations.map((rec, idx) => {
             const borderColour =
               rec.severity === "critical"
-                ? "border-rose-200 bg-rose-50"
+                ? "border-rose-500/40 bg-rose-900/40"
                 : rec.severity === "warning"
-                ? "border-amber-200 bg-amber-50"
-                : "border-slate-100 bg-slate-50";
+                ? "border-amber-500/40 bg-amber-900/40"
+                : "border-slate-700 bg-slate-800";
 
             const badgeColour =
               rec.severity === "critical"
-                ? "bg-rose-100 text-rose-700"
+                ? "bg-rose-500/30 text-rose-100"
                 : rec.severity === "warning"
-                ? "bg-amber-100 text-amber-700"
-                : "bg-slate-100 text-slate-700";
+                ? "bg-amber-500/30 text-amber-100"
+                : "bg-slate-500/30 text-slate-100";
 
             const badgeLabel =
               rec.severity === "critical"
@@ -331,7 +340,7 @@ export default function ResultsPanel({
                 className={`flex flex-col gap-1 rounded-xl border px-3 py-2.5 ${borderColour}`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-semibold text-slate-800">
+                  <span className="text-[11px] font-semibold text-slate-50">
                     {rec.area}
                   </span>
                   <span
@@ -340,7 +349,7 @@ export default function ResultsPanel({
                     {badgeLabel}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-700">
+                <p className="text-[11px] text-slate-100">
                   {rec.message}
                 </p>
               </div>
@@ -367,28 +376,28 @@ function MetricTile({
 }: MetricTileProps) {
   const accentClass =
     accent === "green"
-      ? "border-emerald-100 bg-emerald-50"
+      ? "border-emerald-500/40 bg-emerald-900/40"
       : accent === "red"
-      ? "border-rose-100 bg-rose-50"
+      ? "border-rose-500/40 bg-rose-900/40"
       : accent === "blue"
-      ? "border-sky-100 bg-sky-50"
-      : "border-slate-100 bg-white";
+      ? "border-sky-500/40 bg-sky-900/40"
+      : "border-slate-700 bg-slate-800";
 
   const valueColour =
     accent === "green"
-      ? "text-emerald-800"
+      ? "text-emerald-200"
       : accent === "red"
-      ? "text-rose-800"
+      ? "text-rose-200"
       : accent === "blue"
-      ? "text-sky-800"
-      : "text-slate-900";
+      ? "text-sky-200"
+      : "text-slate-50";
 
   return (
     <div
       className={`flex flex-col justify-between rounded-xl border px-3 py-2.5 ${accentClass}`}
     >
       <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="text-xs font-medium text-slate-600">
+        <span className="text-xs font-medium text-slate-300">
           {label}
         </span>
         {rightBadge}
@@ -409,14 +418,14 @@ type HeroMetricProps = {
 function HeroMetric({ label, value, accent }: HeroMetricProps) {
   const valueColour =
     accent === "green"
-      ? "text-emerald-300"
+      ? "text-emerald-200"
       : accent === "red"
-      ? "text-rose-300"
+      ? "text-rose-200"
       : "text-slate-50";
 
   return (
     <div className="space-y-0.5">
-      <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+      <div className="text-[11px] font-medium uppercase tracking-wide text-slate-300">
         {label}
       </div>
       <div className={`text-lg font-semibold ${valueColour}`}>{value}</div>
