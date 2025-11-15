@@ -15,15 +15,9 @@ export default function MetricInputWithBenchmark({
 }: Props) {
   const suffix = mode === "percent" ? "%" : "€";
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    const parsed = parseFloat(raw);
-    onChange(!isNaN(parsed) ? parsed : 0);
-  };
-
   return (
     <div className="flex flex-col space-y-1">
-      <label className="text-[11px] font-semibold text-slate-200">
+      <label className="text-xs font-semibold text-slate-200">
         {label}
       </label>
 
@@ -31,16 +25,16 @@ export default function MetricInputWithBenchmark({
         <input
           type="number"
           value={value}
-          onChange={handleChange}
-          className="w-full bg-transparent text-slate-100 font-bold outline-none"
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          className="w-full bg-transparent text-slate-100 font-bold text-base outline-none"
         />
 
-        <span className="ml-2 text-[11px] font-semibold text-slate-300">
+        <span className="ml-2 text-xs font-semibold text-slate-300">
           {suffix}
         </span>
       </div>
 
-      <div className="text-[10px] text-slate-400">
+      <div className="text-[11px] text-slate-400">
         Benchmark:{" "}
         <span className="font-semibold text-slate-300">
           {benchmark}
