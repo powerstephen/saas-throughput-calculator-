@@ -17,6 +17,20 @@ import {
   ScenarioAdjustments,
 } from "@/lib/calculations";
 
+type CurrencyCode = "EUR" | "USD" | "GBP";
+
+function getCurrencySymbol(code: CurrencyCode): string {
+  switch (code) {
+    case "USD":
+      return "$";
+    case "GBP":
+      return "£";
+    case "EUR":
+    default:
+      return "€";
+  }
+}
+
 export default function Page() {
   // ------------------------
   // INPUT STATE (actuals)
@@ -52,7 +66,6 @@ export default function Page() {
     targetArr: 2500000,
   });
 
-  // Timeframe in WEEKS for ARR target
   const [timeframeWeeks, setTimeframeWeeks] = useState<number>(52);
 
   const [scenarios, setScenarios] = useState<ScenarioAdjustments>({
@@ -60,6 +73,13 @@ export default function Page() {
     churnImprovementPct: 0,
     aspIncreasePct: 0,
   });
+
+  // ------------------------
+  // CURRENCY STATE
+  // ------------------------
+
+  const [currency, setCurrency] = useState<CurrencyCode>("EUR");
+  const currencySymbol = getCurrencySymbol(currency);
 
   // ------------------------
   // BENCHMARK STATE
@@ -102,7 +122,8 @@ export default function Page() {
         scenarios,
         marketingBenchmarks,
         salesBenchmarks,
-        csBenchmarks
+        csBenchmarks,
+        currencySymbol
       ),
     [
       marketing,
@@ -113,6 +134,7 @@ export default function Page() {
       marketingBenchmarks,
       salesBenchmarks,
       csBenchmarks,
+      currencySymbol,
     ]
   );
 
@@ -162,18 +184,47 @@ export default function Page() {
       {/* BENCHMARK DROPDOWN – dark, matches other boxes */}
       {showBenchmarkSettings && (
         <section className="mb-6 rounded-2xl border border-slate-800 bg-slate-900 p-4 text-slate-50 shadow-soft">
-          <div className="mb-3">
-            <h2 className="text-sm font-semibold text-slate-50">Benchmarks</h2>
-            <p className="text-xs text-slate-300">
-              These benchmarks drive diagnostic colour-coding and run-rate
-              comparisons across the dashboard.
-            </p>
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-50">
+                Benchmarks
+              </h2>
+              <p className="text-xs text-slate-300">
+                These benchmarks drive diagnostic colour-coding and run-rate
+                comparisons across the dashboard.
+              </p>
+            </div>
+
+            {/* Currency selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-slate-300">
+                Display currency:
+              </span>
+              <div className="inline-flex rounded-full bg-slate-800 p-1">
+                {(["EUR", "USD", "GBP"] as CurrencyCode[]).map((code) => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => setCurrency(code)}
+                    className={`px-3 py-1 text-[11px] font-semibold rounded-full ${
+                      currency === code
+                        ? "bg-sky-500 text-white"
+                        : "text-slate-200 hover:bg-slate-700"
+                    }`}
+                  >
+                    {code}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-4">
             {/* MARKETING BENCHMARKS */}
             <div className="space-y-2 rounded-xl border border-slate-700 bg-slate-800 p-3">
-              <h3 className="text-xs font-semibold text-slate-100">Marketing</h3>
+              <h3 className="text-xs font-semibold text-slate-100">
+                Marketing
+              </h3>
               <NumberInput
                 label="Lead → MQL target"
                 suffix="%"
@@ -200,7 +251,7 @@ export default function Page() {
               />
               <NumberInput
                 label="Blended CAC target"
-                suffix="€"
+                suffix={currencySymbol}
                 value={marketingBenchmarks.blendedCAC}
                 onChange={(v) =>
                   setMarketingBenchmarks({
@@ -246,7 +297,7 @@ export default function Page() {
               />
               <NumberInput
                 label="ACV target"
-                suffix="€"
+                suffix={currencySymbol}
                 value={salesBenchmarks.asp}
                 onChange={(v) =>
                   setSalesBenchmarks({ ...salesBenchmarks, asp: v })
@@ -307,30 +358,26 @@ export default function Page() {
 
             {/* ARR + TIMEFRAME */}
             <div className="space-y-2 rounded-xl border border-slate-700 bg-slate-800 p-3">
-              <h3 className="text-xs font-semibold text-slate-100">ARR Target</h3>
+              <h3 className="text-xs font-semibold text-slate-100">
+                ARR Target
+              </h3>
               <NumberInput
                 label="Current ARR"
-                suffix="€"
+                suffix={currencySymbol}
                 value={finance.currentArr}
-                onChange={(v) =>
-                  setFinance({ ...finance, currentArr: v })
-                }
+                onChange={(v) => setFinance({ ...finance, currentArr: v })}
               />
               <NumberInput
                 label="ARR target"
-                suffix="€"
+                suffix={currencySymbol}
                 value={finance.targetArr}
-                onChange={(v) =>
-                  setFinance({ ...finance, targetArr: v })
-                }
+                onChange={(v) => setFinance({ ...finance, targetArr: v })}
               />
               <NumberInput
                 label="Timeframe"
                 suffix="weeks"
                 value={timeframeWeeks}
-                onChange={(v) =>
-                  setTimeframeWeeks(v > 0 ? v : 1)
-                }
+                onChange={(v) => setTimeframeWeeks(v > 0 ? v : 1)}
               />
             </div>
           </div>
@@ -344,6 +391,7 @@ export default function Page() {
           currentArr={finance.currentArr}
           targetArr={finance.targetArr}
           timeframeWeeks={timeframeWeeks}
+          currencySymbol={currencySymbol}
         />
       </div>
 
@@ -354,41 +402,31 @@ export default function Page() {
           <NumberInput
             label="Website traffic"
             value={marketing.traffic}
-            onChange={(v) =>
-              setMarketing({ ...marketing, traffic: v })
-            }
+            onChange={(v) => setMarketing({ ...marketing, traffic: v })}
           />
           <NumberInput
             label="Leads per month"
             value={marketing.leads}
-            onChange={(v) =>
-              setMarketing({ ...marketing, leads: v })
-            }
+            onChange={(v) => setMarketing({ ...marketing, leads: v })}
           />
           <MetricInputWithBenchmark
             label="Lead → MQL"
             value={marketing.mqlRate}
-            onChange={(v) =>
-              setMarketing({ ...marketing, mqlRate: v })
-            }
+            onChange={(v) => setMarketing({ ...marketing, mqlRate: v })}
             benchmark={marketingBenchmarks.mqlRate}
             mode="percent"
           />
           <MetricInputWithBenchmark
             label="MQL → SQL"
             value={marketing.sqlRate}
-            onChange={(v) =>
-              setMarketing({ ...marketing, sqlRate: v })
-            }
+            onChange={(v) => setMarketing({ ...marketing, sqlRate: v })}
             benchmark={marketingBenchmarks.sqlRate}
             mode="percent"
           />
           <MetricInputWithBenchmark
             label="SQL → Opportunity"
             value={marketing.oppRate}
-            onChange={(v) =>
-              setMarketing({ ...marketing, oppRate: v })
-            }
+            onChange={(v) => setMarketing({ ...marketing, oppRate: v })}
             benchmark={marketingBenchmarks.oppRate}
             mode="percent"
           />
@@ -400,6 +438,7 @@ export default function Page() {
             }
             benchmark={marketingBenchmarks.blendedCAC}
             mode="currency"
+            currencySymbol={currencySymbol}
           />
         </InputSection>
 
@@ -426,11 +465,10 @@ export default function Page() {
           <MetricInputWithBenchmark
             label="ACV (ASP)"
             value={sales.asp}
-            onChange={(v) =>
-              setSales({ ...sales, asp: v })
-            }
+            onChange={(v) => setSales({ ...sales, asp: v })}
             benchmark={salesBenchmarks.asp}
             mode="currency"
+            currencySymbol={currencySymbol}
           />
           <NumberInput
             label="Sales cycle"
@@ -442,7 +480,7 @@ export default function Page() {
           />
           <NumberInput
             label="Open pipeline value"
-            suffix="€"
+            suffix={currencySymbol}
             value={sales.openPipelineValue}
             onChange={(v) =>
               setSales({ ...sales, openPipelineValue: v })
@@ -485,9 +523,7 @@ export default function Page() {
           <MetricInputWithBenchmark
             label="NRR"
             value={cs.nrr}
-            onChange={(v) =>
-              setCs({ ...cs, nrr: v })
-            }
+            onChange={(v) => setCs({ ...cs, nrr: v })}
             benchmark={csBenchmarks.nrr}
             mode="percent"
           />
