@@ -1,15 +1,9 @@
-"use client";
-
-import NumberInput from "./NumberInput";
-
-type Mode = "percent" | "number" | "currency";
-
 type Props = {
   label: string;
   value: number;
-  onChange: (value: number) => void;
+  onChange: (v: number) => void;
   benchmark: number;
-  mode?: Mode;
+  mode: "percent" | "currency";
 };
 
 export default function MetricInputWithBenchmark({
@@ -17,40 +11,41 @@ export default function MetricInputWithBenchmark({
   value,
   onChange,
   benchmark,
-  mode = "percent"
+  mode,
 }: Props) {
-  const suffix =
-    mode === "percent" ? "%" : mode === "currency" ? "€" : undefined;
+  const suffix = mode === "percent" ? "%" : "€";
 
-  const delta = value - benchmark;
-  const isAbove = delta > 0;
-  const isBelow = delta < 0;
-
-  const format = (v: number) =>
-    mode === "percent" ? `${v.toFixed(0)}%` : mode === "currency" ? `€${v.toFixed(0)}` : v.toFixed(0);
-
-  const deltaLabel =
-    delta === 0
-      ? "On benchmark"
-      : `${isAbove ? "+" : ""}${delta.toFixed(0)} ${mode === "percent" ? "pts" : ""}`;
-
-  const deltaColour = isAbove
-    ? "text-emerald-600"
-    : isBelow
-    ? "text-rose-600"
-    : "text-slate-500";
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const parsed = parseFloat(raw);
+    onChange(!isNaN(parsed) ? parsed : 0);
+  };
 
   return (
-    <div className="flex flex-col gap-1 text-sm">
-      <NumberInput
-        label={label}
-        value={value}
-        onChange={onChange}
-        suffix={suffix}
-      />
-      <div className="flex items-center justify-between text-[11px] text-slate-500">
-        <span>Benchmark: <span className="font-medium text-slate-700">{format(benchmark)}</span></span>
-        <span className={`font-medium ${deltaColour}`}>{deltaLabel}</span>
+    <div className="flex flex-col space-y-1">
+      <label className="text-[11px] font-semibold text-slate-200">
+        {label}
+      </label>
+
+      <div className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-800 px-2 py-1">
+        <input
+          type="number"
+          value={value}
+          onChange={handleChange}
+          className="w-full bg-transparent text-slate-100 font-bold outline-none"
+        />
+
+        <span className="ml-2 text-[11px] font-semibold text-slate-300">
+          {suffix}
+        </span>
+      </div>
+
+      <div className="text-[10px] text-slate-400">
+        Benchmark:{" "}
+        <span className="font-semibold text-slate-300">
+          {benchmark}
+          {suffix}
+        </span>
       </div>
     </div>
   );
