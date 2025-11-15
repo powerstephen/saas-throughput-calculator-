@@ -6,24 +6,17 @@ type Props = {
   children: ReactNode;
 };
 
-export default function InputSection({
-  title,
-  subtitle,
-  children
-}: Props) {
+export default function InputSection({ title, subtitle, children }: Props) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-      <header className="mb-3">
-        <h2 className="text-sm font-semibold text-slate-900">
-          {title}
-        </h2>
+    <section className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 text-slate-50 shadow-soft">
+      <div>
+        <h2 className="text-sm font-semibold text-slate-50">{title}</h2>
         {subtitle && (
-          <p className="mt-1 text-xs text-slate-500">
-            {subtitle}
-          </p>
+          <p className="text-[11px] text-slate-300">{subtitle}</p>
         )}
-      </header>
-      <div className="grid grid-cols-1 gap-3">
+      </div>
+
+      <div className="space-y-3 text-xs text-slate-100">
         {children}
       </div>
     </section>
