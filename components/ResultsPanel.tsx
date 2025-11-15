@@ -29,6 +29,15 @@ export default function ResultsPanel({
     currentArr + forecast.monthlyNetNewArr * months;
   const arrGap = targetArr - projectedArrInTimeframe;
 
+  // ARR run rate based on current ARR + 12x net new ARR
+  const arrRunRate = currentArr + forecast.monthlyNetNewArr * 12;
+
+  // Split recommendations into top 2 priorities + others
+  const priority1 = recommendations[0];
+  const priority2 = recommendations[1];
+  const otherFindings =
+    recommendations.length > 2 ? recommendations.slice(2) : [];
+
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-slate-50 shadow-soft">
       {/* ROW 1: ARR SUMMARY */}
@@ -82,63 +91,74 @@ export default function ResultsPanel({
         </div>
       </div>
 
-      {/* ROW 2: CHURN / EXPANSION / EFFICIENCY / PIPELINE */}
-      <div className="mt-4 grid gap-4 md:grid-cols-4">
-        <div className="rounded-xl bg-slate-800/60 p-3">
-          <div className="text-[11px] text-slate-300">Churned ARR / year</div>
-          <div className="mt-1 text-base font-semibold">
-            {formatCurrencyFull(forecast.churnedArrYear, currencySymbol)}
-          </div>
-          <div className="mt-2 text-[11px] text-slate-300">
-            Expansion ARR / year:{" "}
-            <span className="font-semibold">
-              {formatCurrencyFull(forecast.expansionArrYear, currencySymbol)}
-            </span>
-          </div>
+      {/* ROW 2: MONTHLY FLOW & RUN RATE */}
+      <div className="mt-4">
+        <div className="mb-2 text-xs font-semibold text-slate-100">
+          Monthly Flow & Run Rate
         </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {/* Net new + run rate */}
+          <div className="rounded-xl bg-slate-800/60 p-3">
+            <div className="text-[11px] text-slate-300">
+              Net new ARR / month
+            </div>
+            <div className="mt-1 text-base font-semibold">
+              {formatCurrencyFull(forecast.monthlyNetNewArr, currencySymbol)}
+            </div>
+            <div className="mt-2 text-[11px] text-slate-300">
+              ARR run rate (12m):{" "}
+              <span className="font-semibold">
+                {formatCurrencyFull(arrRunRate, currencySymbol)}
+              </span>
+            </div>
+          </div>
 
-        <div className="rounded-xl bg-slate-800/60 p-3">
-          <div className="text-[11px] text-slate-300">Net new ARR / month</div>
-          <div className="mt-1 text-base font-semibold">
-            {formatCurrencyFull(forecast.monthlyNetNewArr, currencySymbol)}
+          {/* Churn / expansion */}
+          <div className="rounded-xl bg-slate-800/60 p-3">
+            <div className="text-[11px] text-slate-300">Churned ARR / year</div>
+            <div className="mt-1 text-base font-semibold">
+              {formatCurrencyFull(forecast.churnedArrYear, currencySymbol)}
+            </div>
+            <div className="mt-2 text-[11px] text-slate-300">
+              Expansion ARR / year:{" "}
+              <span className="font-semibold">
+                {formatCurrencyFull(forecast.expansionArrYear, currencySymbol)}
+              </span>
+            </div>
           </div>
-          <div className="mt-2 text-[11px] text-slate-300">
-            Gross new ARR / month:{" "}
-            <span className="font-semibold">
-              {formatCurrencyFull(forecast.monthlyNewArr, currencySymbol)}
-            </span>
-          </div>
-        </div>
 
-        <div className="rounded-xl bg-slate-800/60 p-3">
-          <div className="text-[11px] text-slate-300">CAC Payback</div>
-          <div className="mt-1 text-base font-semibold">
-            {efficiency.cacPaybackMonths
-              ? `${efficiency.cacPaybackMonths.toFixed(1)} months`
-              : "—"}
-          </div>
-          <div className="mt-2 text-[11px] text-slate-300">
-            LTV:CAC:{" "}
-            <span className="font-semibold">
-              {efficiency.ltvToCac ? efficiency.ltvToCac.toFixed(2) : "—"}
-            </span>
-          </div>
-        </div>
-
-        <div className="rounded-xl bg-slate-800/60 p-3">
-          <div className="text-[11px] text-slate-300">
-            Pipeline Coverage Status
-          </div>
-          <div className="mt-1 text-base font-semibold capitalize">
-            {efficiency.pipelineCoverageStatus}
-          </div>
-          <div className="mt-2 text-[11px] text-slate-300">
-            Coverage multiple:{" "}
-            <span className="font-semibold">
-              {efficiency.pipelineCoverageActual
-                ? `${efficiency.pipelineCoverageActual.toFixed(2)}×`
+          {/* CAC / LTV */}
+          <div className="rounded-xl bg-slate-800/60 p-3">
+            <div className="text-[11px] text-slate-300">CAC Payback</div>
+            <div className="mt-1 text-base font-semibold">
+              {efficiency.cacPaybackMonths
+                ? `${efficiency.cacPaybackMonths.toFixed(1)} months`
                 : "—"}
-            </span>
+            </div>
+            <div className="mt-2 text-[11px] text-slate-300">
+              LTV:CAC:{" "}
+              <span className="font-semibold">
+                {efficiency.ltvToCac ? efficiency.ltvToCac.toFixed(2) : "—"}
+              </span>
+            </div>
+          </div>
+
+          {/* Pipeline */}
+          <div className="rounded-xl bg-slate-800/60 p-3">
+            <div className="text-[11px] text-slate-300">
+              Pipeline Coverage Status
+            </div>
+            <div className="mt-1 text-base font-semibold capitalize">
+              {efficiency.pipelineCoverageStatus}
+            </div>
+            <div className="mt-2 text-[11px] text-slate-300">
+              Coverage multiple:{" "}
+              <span className="font-semibold">
+                {efficiency.pipelineCoverageActual
+                  ? `${efficiency.pipelineCoverageActual.toFixed(2)}×`
+                  : "—"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -179,39 +199,101 @@ export default function ResultsPanel({
         </div>
       </div>
 
-      {/* RECOMMENDATIONS */}
-      <div className="mt-4 rounded-xl bg-slate-800/50 p-3">
-        <div className="mb-2 text-xs font-semibold text-slate-100">
-          Recommendations
-        </div>
-
-        <div className="space-y-2">
-          {recommendations.map((rec, idx) => (
-            <div
-              key={idx}
-              className="rounded-lg border border-slate-700 bg-slate-900/60 p-2"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-slate-200">
-                  {rec.area}
-                </span>
-                <span
-                  className={`rounded-full px-2 py-[1px] text-[10px] font-semibold ${
-                    rec.severity === "critical"
-                      ? "bg-red-500/20 text-red-300 border border-red-500/40"
-                      : rec.severity === "warning"
-                      ? "bg-amber-500/20 text-amber-200 border border-amber-500/40"
-                      : "bg-slate-600/30 text-slate-200 border border-slate-500/40"
-                  }`}
-                >
-                  {rec.severity}
-                </span>
+      {/* ROW 4: TOP PRIORITIES (SIDE BY SIDE) */}
+      {(priority1 || priority2) && (
+        <div className="mt-5">
+          <div className="mb-2 text-xs font-semibold text-slate-100">
+            Top Priorities
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {priority1 && (
+              <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-slate-50">
+                    Priority 1 · {priority1.area}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-[2px] text-[10px] font-semibold ${
+                      priority1.severity === "critical"
+                        ? "bg-red-500/20 text-red-300 border border-red-500/40"
+                        : priority1.severity === "warning"
+                        ? "bg-amber-500/20 text-amber-200 border border-amber-500/40"
+                        : "bg-slate-600/30 text-slate-200 border border-slate-500/40"
+                    }`}
+                  >
+                    {priority1.severity}
+                  </span>
+                </div>
+                <p className="text-[12px] leading-snug text-slate-100">
+                  {priority1.message}
+                </p>
               </div>
-              <p className="mt-1 text-[11px] text-slate-200">{rec.message}</p>
-            </div>
-          ))}
+            )}
+
+            {priority2 && (
+              <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-slate-50">
+                    Priority 2 · {priority2.area}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-[2px] text-[10px] font-semibold ${
+                      priority2.severity === "critical"
+                        ? "bg-red-500/20 text-red-300 border border-red-500/40"
+                        : priority2.severity === "warning"
+                        ? "bg-amber-500/20 text-amber-200 border border-amber-500/40"
+                        : "bg-slate-600/30 text-slate-200 border border-slate-500/40"
+                    }`}
+                  >
+                    {priority2.severity}
+                  </span>
+                </div>
+                <p className="text-[12px] leading-snug text-slate-100">
+                  {priority2.message}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ROW 5: OTHER FINDINGS */}
+      {otherFindings.length > 0 && (
+        <div className="mt-4 rounded-xl bg-slate-800/50 p-3">
+          <div className="mb-2 text-xs font-semibold text-slate-100">
+            Other Findings
+          </div>
+
+          <div className="space-y-2">
+            {otherFindings.map((rec, idx) => (
+              <div
+                key={idx}
+                className="rounded-lg border border-slate-700 bg-slate-900/60 p-2"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-slate-200">
+                    {rec.area}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-[1px] text-[10px] font-semibold ${
+                      rec.severity === "critical"
+                        ? "bg-red-500/20 text-red-300 border border-red-500/40"
+                        : rec.severity === "warning"
+                        ? "bg-amber-500/20 text-amber-200 border border-amber-500/40"
+                        : "bg-slate-600/30 text-slate-200 border border-slate-500/40"
+                    }`}
+                  >
+                    {rec.severity}
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] text-slate-200">
+                  {rec.message}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
