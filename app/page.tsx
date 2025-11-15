@@ -103,32 +103,39 @@ export default function Page() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      {/* HEADER (CENTERED) */}
+      {/* HEADER – logo left, text centered, button right */}
       <header className="mb-8 border-b border-slate-200 pb-6">
-        <div className="flex flex-col items-center text-center">
-          <img
-            src="/power-logo.png"
-            alt="Dashboard logo"
-            className="mb-3 h-24 w-24 rounded-2xl border border-slate-200 bg-white object-contain shadow-sm"
-          />
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between">
+          {/* LEFT: Logo */}
+          <div className="flex items-center justify-start sm:w-[180px]">
+            <img
+              src="/power-logo.png"
+              alt="Dashboard logo"
+              className="h-20 w-20 rounded-2xl border border-slate-200 bg-white object-contain shadow-sm"
+            />
+          </div>
 
-          <h1 className="text-4xl font-bold text-slate-900">
-            SaaS Revenue Engine Dashboard
-          </h1>
+          {/* CENTER: Title + subtitle */}
+          <div className="flex-1 text-center">
+            <h1 className="text-4xl font-bold text-slate-900">
+              SaaS Revenue Engine Dashboard
+            </h1>
+            <div className="mx-auto mt-2 h-1 w-24 rounded-full bg-sky-500" />
+            <p className="mt-3 max-w-2xl mx-auto text-base font-medium text-slate-600">
+              Key Metrics: Throughput, ARR Run Rate, Full-Funnel Performance & Forecast Intelligence
+            </p>
+          </div>
 
-          <div className="mt-2 h-1 w-24 rounded-full bg-sky-500" />
-
-          <p className="mt-3 max-w-2xl text-base font-medium text-slate-600">
-            Key Metrics: Throughput, ARR Run Rate, Full-Funnel Performance & Forecast Intelligence
-          </p>
-
-          <button
-            type="button"
-            onClick={() => setShowBenchmarkSettings((prev) => !prev)}
-            className="mt-4 rounded-full border border-slate-300 px-5 py-2 text-xs font-medium text-slate-800 shadow-sm hover:bg-slate-50"
-          >
-            {showBenchmarkSettings ? "Hide benchmarks" : "Adjust benchmarks"}
-          </button>
+          {/* RIGHT: Benchmarks button */}
+          <div className="flex items-center justify-end sm:w-[180px]">
+            <button
+              type="button"
+              onClick={() => setShowBenchmarkSettings((prev) => !prev)}
+              className="rounded-full border border-slate-300 px-5 py-2 text-xs font-medium text-slate-800 shadow-sm hover:bg-slate-50"
+            >
+              {showBenchmarkSettings ? "Hide benchmarks" : "Adjust benchmarks"}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -150,25 +157,36 @@ export default function Page() {
                 label="Lead → MQL target"
                 suffix="%"
                 value={marketingBenchmarks.mqlRate}
-                onChange={(v) => setMarketingBenchmarks({ ...marketingBenchmarks, mqlRate: v })}
+                onChange={(v) =>
+                  setMarketingBenchmarks({ ...marketingBenchmarks, mqlRate: v })
+                }
               />
               <NumberInput
                 label="MQL → SQL target"
                 suffix="%"
                 value={marketingBenchmarks.sqlRate}
-                onChange={(v) => setMarketingBenchmarks({ ...marketingBenchmarks, sqlRate: v })}
+                onChange={(v) =>
+                  setMarketingBenchmarks({ ...marketingBenchmarks, sqlRate: v })
+                }
               />
               <NumberInput
                 label="SQL → Opp target"
                 suffix="%"
                 value={marketingBenchmarks.oppRate}
-                onChange={(v) => setMarketingBenchmarks({ ...marketingBenchmarks, oppRate: v })}
+                onChange={(v) =>
+                  setMarketingBenchmarks({ ...marketingBenchmarks, oppRate: v })
+                }
               />
               <NumberInput
                 label="Blended CAC target"
                 suffix="€"
                 value={marketingBenchmarks.blendedCAC}
-                onChange={(v) => setMarketingBenchmarks({ ...marketingBenchmarks, blendedCAC: v })}
+                onChange={(v) =>
+                  setMarketingBenchmarks({
+                    ...marketingBenchmarks,
+                    blendedCAC: v,
+                  })
+                }
               />
             </div>
 
@@ -179,25 +197,39 @@ export default function Page() {
                 label="SQL → Opp target"
                 suffix="%"
                 value={salesBenchmarks.sqlToOpp}
-                onChange={(v) => setSalesBenchmarks({ ...salesBenchmarks, sqlToOpp: v })}
+                onChange={(v) =>
+                  setSalesBenchmarks({ ...salesBenchmarks, sqlToOpp: v })
+                }
               />
               <NumberInput
                 label="Opp → Proposal target"
                 suffix="%"
                 value={salesBenchmarks.oppToProposal}
-                onChange={(v) => setSalesBenchmarks({ ...salesBenchmarks, oppToProposal: v })}
+                onChange={(v) =>
+                  setSalesBenchmarks({
+                    ...salesBenchmarks,
+                    oppToProposal: v,
+                  })
+                }
               />
               <NumberInput
                 label="Proposal → Win target"
                 suffix="%"
                 value={salesBenchmarks.proposalToWin}
-                onChange={(v) => setSalesBenchmarks({ ...salesBenchmarks, proposalToWin: v })}
+                onChange={(v) =>
+                  setSalesBenchmarks({
+                    ...salesBenchmarks,
+                    proposalToWin: v,
+                  })
+                }
               />
               <NumberInput
                 label="ACV target"
                 suffix="€"
                 value={salesBenchmarks.asp}
-                onChange={(v) => setSalesBenchmarks({ ...salesBenchmarks, asp: v })}
+                onChange={(v) =>
+                  setSalesBenchmarks({ ...salesBenchmarks, asp: v })
+                }
               />
             </div>
 
@@ -208,25 +240,42 @@ export default function Page() {
                 label="Monthly churn target"
                 suffix="%"
                 value={csBenchmarks.monthlyChurnRate}
-                onChange={(v) => setCsBenchmarks({ ...csBenchmarks, monthlyChurnRate: v })}
+                onChange={(v) =>
+                  setCsBenchmarks({
+                    ...csBenchmarks,
+                    monthlyChurnRate: v,
+                  })
+                }
               />
               <NumberInput
                 label="Expansion target"
                 suffix="%"
                 value={csBenchmarks.expansionRate}
-                onChange={(v) => setCsBenchmarks({ ...csBenchmarks, expansionRate: v })}
+                onChange={(v) =>
+                  setCsBenchmarks({
+                    ...csBenchmarks,
+                    expansionRate: v,
+                  })
+                }
               />
               <NumberInput
                 label="NRR target"
                 suffix="%"
                 value={csBenchmarks.nrr}
-                onChange={(v) => setCsBenchmarks({ ...csBenchmarks, nrr: v })}
+                onChange={(v) =>
+                  setCsBenchmarks({ ...csBenchmarks, nrr: v })
+                }
               />
               <NumberInput
                 label="Gross margin target"
                 suffix="%"
                 value={csBenchmarks.grossMargin}
-                onChange={(v) => setCsBenchmarks({ ...csBenchmarks, grossMargin: v })}
+                onChange={(v) =>
+                  setCsBenchmarks({
+                    ...csBenchmarks,
+                    grossMargin: v,
+                  })
+                }
               />
             </div>
 
@@ -350,7 +399,9 @@ export default function Page() {
             suffix="×"
             value={sales.pipelineCoverageTarget}
             step={0.5}
-            onChange={(v) => setSales({ ...sales, pipelineCoverageTarget: v })}
+            onChange={(v) =>
+              setSales({ ...sales, pipelineCoverageTarget: v })
+            }
           />
         </InputSection>
 
@@ -387,13 +438,15 @@ export default function Page() {
         </InputSection>
       </div>
 
-      {/* SCENARIO PLANNING */}
-      <InputSection
-        title="Scenario Planning"
-        subtitle="Dial up conversion rates, reduce churn, or increase ACV and see the impact instantly."
-      >
-        <ScenarioPanel scenarios={scenarios} onChange={setScenarios} />
-      </InputSection>
+      {/* SCENARIO PLANNING – now with spacing above */}
+      <div className="mt-6">
+        <InputSection
+          title="Scenario Planning"
+          subtitle="Dial up conversion rates, reduce churn, or increase ACV and see the impact instantly."
+        >
+          <ScenarioPanel scenarios={scenarios} onChange={setScenarios} />
+        </InputSection>
+      </div>
     </main>
   );
 }
