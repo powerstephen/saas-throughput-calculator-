@@ -52,8 +52,8 @@ export default function Page() {
     targetArr: 2500000,
   });
 
-  // timeframe is kept separate so we don't have to touch lib/calculations types
-  const [timeframeMonths, setTimeframeMonths] = useState<number>(12);
+  // Timeframe in WEEKS for target (more granular, easier to type)
+  const [timeframeWeeks, setTimeframeWeeks] = useState<number>(52);
 
   const [scenarios, setScenarios] = useState<ScenarioAdjustments>({
     convLiftPct: 0,
@@ -259,7 +259,7 @@ export default function Page() {
               />
             </div>
 
-            {/* ARR + timeframe */}
+            {/* ARR + timeframe (weeks) */}
             <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
               <h3 className="text-xs font-semibold text-slate-800">ARR Target</h3>
               <NumberInput
@@ -280,10 +280,10 @@ export default function Page() {
               />
               <NumberInput
                 label="Timeframe to target"
-                suffix="months"
-                value={timeframeMonths}
+                suffix="weeks"
+                value={timeframeWeeks}
                 onChange={(v) =>
-                  setTimeframeMonths(v > 0 ? v : 1)
+                  setTimeframeWeeks(v > 0 ? v : 1)
                 }
               />
             </div>
@@ -297,7 +297,7 @@ export default function Page() {
           result={result}
           currentArr={finance.currentArr}
           targetArr={finance.targetArr}
-          timeframeMonths={timeframeMonths}
+          timeframeWeeks={timeframeWeeks}
         />
       </div>
 
