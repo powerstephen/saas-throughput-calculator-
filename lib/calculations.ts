@@ -4,16 +4,16 @@ export type MarketingInputs = {
   mqlRate: number; // %
   sqlRate: number; // %
   oppRate: number; // %
-  blendedCAC: number; // €
+  blendedCAC: number; // currency
 };
 
 export type SalesInputs = {
   oppToProposal: number; // %
   proposalToWin: number; // %
-  asp: number; // €
+  asp: number; // currency
   salesCycleDays: number;
   pipelineCoverageTarget: number; // ×
-  openPipelineValue: number; // €
+  openPipelineValue: number; // currency
 };
 
 export type CsInputs = {
@@ -24,8 +24,8 @@ export type CsInputs = {
 };
 
 export type FinanceInputs = {
-  currentArr: number; // €
-  targetArr: number; // €
+  currentArr: number; // currency
+  targetArr: number; // currency
 };
 
 export type ScenarioAdjustments = {
@@ -94,6 +94,13 @@ function severityFromGap(
   return "critical";
 }
 
+function formatCurrencyFull(value: number, currencySymbol: string): string {
+  if (!Number.isFinite(value)) return "-";
+  return `${currencySymbol}${value.toLocaleString("en-US", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
 // ---------- main calculation ----------
 
 export function calculateAll(
@@ -119,7 +126,8 @@ export function calculateAll(
     expansionRate: number;
     nrr: number;
     grossMargin: number;
-  }
+  },
+  currencySymbol: string
 ): CalculatorResult {
   // -------- apply scenario adjustments --------
 
@@ -135,10 +143,7 @@ export function calculateAll(
   const proposalToWinEff = sales.proposalToWin * convFactor;
   const aspEff = sales.asp * aspFactor;
 
-  const monthlyChurnEff = Math.max(
-    cs.monthlyChurnRate * churnFactor,
-    0
-  );
+  const monthlyChurnEff = Math.max(cs.monthlyChurnRate * churnFactor, 0);
 
   // -------- funnel throughput (monthly) --------
 
@@ -156,8 +161,7 @@ export function calculateAll(
   const annualChurnRate = annualisedChurnFromMonthly(monthlyChurnEff);
   const churnedArrYear = finance.currentArr * annualChurnRate;
 
-  const expansionArrYear =
-    finance.currentArr * (cs.expansionRate / 100);
+  const expansionArrYear = finance.currentArr * (cs.expansionRate / 100);
 
   const projectedArr12m =
     finance.currentArr + newArrAnnual + expansionArrYear - churnedArrYear;
@@ -230,19 +234,6 @@ export function calculateAll(
 
   const recommendations: Recommendation[] = [];
 
-  const formatCurrency = (value: number): string => {
-    if (!Number.isFinite(value)) return "-";
-    if (Math.abs(value) >= 1_000_000) {
-      // 3 decimal places for millions, e.g. 2.545M
-      return `€${(value / 1_000_000).toFixed(3)}M`;
-    }
-    if (Math.abs(value) >= 1_000) {
-      // keep 1 decimal place for thousands
-      return `€${(value / 1_000).toFixed(1)}k`;
-    }
-    return `€${value.toFixed(0)}`;
-  };
-
   // --- 1) Proposal → Win severity + ARR uplift ---
 
   const proposalSeverity = severityFromGap(
@@ -251,20 +242,19 @@ export function calculateAll(
   );
 
   if (proposalSeverity) {
-    // ARR uplift if Proposal → Win hit benchmark
     const proposalWinBenchmarkEff =
       salesBenchmarks.proposalToWin * convFactor;
 
-    const winsIfBenchmark =
-      proposals * (proposalWinBenchmarkEff / 100);
+    const winsIfBenchmark = proposals * (proposalWinBenchmarkEff / 100);
 
     const annualNewArrIfBenchmark = winsIfBenchmark * aspEff * 12;
     const upliftArr = annualNewArrIfBenchmark - newArrAnnual;
 
     const upliftText =
       upliftArr > 0
-        ? `Fixing this could unlock roughly ${formatCurrency(
-            upliftArr
+        ? `Fixing this could unlock roughly ${formatCurrencyFull(
+            upliftArr,
+            currencySymbol
           )} in additional new ARR per year at your current volume.`
         : `This step is still constraining your funnel even at current volumes.`;
 
@@ -284,30 +274,30 @@ export function calculateAll(
   const churnSeverity = severityFromGap(
     monthlyChurnEff,
     csBenchmarks.monthlyChurnRate,
-    { inverted: true } // lower churn is better
+    { inverted: true }
   );
 
   if (churnSeverity) {
     const annualChurnRateBenchmark = annualisedChurnFromMonthly(
       csBenchmarks.monthlyChurnRate * churnFactor
     );
-    const churnedIfBenchmark =
-      finance.currentArr * annualChurnRateBenchmark;
+    const churnedIfBenchmark = finance.currentArr * annualChurnRateBenchmark;
     const churnReduction = churnedArrYear - churnedIfBenchmark;
 
     const churnText =
       churnReduction > 0
-        ? `At your current ARR, improving churn to benchmark would reduce churned ARR by about ${formatCurrency(
-            churnReduction
+        ? `At your current ARR, improving churn to benchmark would reduce churned ARR by about ${formatCurrencyFull(
+            churnReduction,
+            currencySymbol
           )} per year.`
         : `Current churn is above ideal and will drag down long-term ARR if left as is.`;
 
     recommendations.push({
       area: "Customer Success · Churn",
       severity: churnSeverity,
-      message: `Monthly churn is effectively ${
-        monthlyChurnEff.toFixed(2)
-      }% vs a benchmark of ${csBenchmarks.monthlyChurnRate.toFixed(
+      message: `Monthly churn is effectively ${monthlyChurnEff.toFixed(
+        2
+      )}% vs a benchmark of ${csBenchmarks.monthlyChurnRate.toFixed(
         2
       )}%. ${churnText}`,
     });
@@ -318,17 +308,19 @@ export function calculateAll(
   const cacSeverity = severityFromGap(
     marketing.blendedCAC,
     marketingBenchmarks.blendedCAC,
-    { inverted: true } // lower CAC is better
+    { inverted: true }
   );
 
   if (cacSeverity) {
     recommendations.push({
       area: "Marketing · CAC",
       severity: cacSeverity,
-      message: `Blended CAC is ${formatCurrency(
-        marketing.blendedCAC
-      )} vs a target of ${formatCurrency(
-        marketingBenchmarks.blendedCAC
+      message: `Blended CAC is ${formatCurrencyFull(
+        marketing.blendedCAC,
+        currencySymbol
+      )} vs a target of ${formatCurrencyFull(
+        marketingBenchmarks.blendedCAC,
+        currencySymbol
       )}. This weakens payback and LTV:CAC and should be a focus for channel mix, targeting and pricing.`,
     });
   }
