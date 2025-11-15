@@ -22,18 +22,16 @@ export default function ResultsPanel({
   timeframeWeeks,
   currencySymbol,
 }: Props) {
-  const { forecast, efficiency, recommendations } = result;
+  const { forecast, efficiency, funnel, recommendations } = result;
 
-  const months = timeframeWeeks / 4.345; // rough conversion
-
+  const months = timeframeWeeks / 4.345; // rough conversion to months
   const projectedArrInTimeframe =
     currentArr + forecast.monthlyNetNewArr * months;
-
   const arrGap = targetArr - projectedArrInTimeframe;
 
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-slate-50 shadow-soft">
-      {/* TOP: ARR summary */}
+      {/* ROW 1: ARR SUMMARY */}
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-xl bg-slate-800/70 p-3">
           <div className="text-[11px] text-slate-300">Current ARR</div>
@@ -70,22 +68,22 @@ export default function ResultsPanel({
 
         <div className="rounded-xl bg-slate-800/70 p-3">
           <div className="text-[11px] text-slate-300">
-            ARR in 12 months (model)
+            New ARR / year (new business)
           </div>
           <div className="mt-1 text-lg font-bold">
-            {formatCurrencyFull(forecast.projectedArr12m, currencySymbol)}
+            {formatCurrencyFull(funnel.newArrAnnual, currencySymbol)}
           </div>
           <div className="mt-1 text-[11px] text-slate-400">
-            Net new / month:{" "}
+            Monthly new ARR:{" "}
             <span className="font-semibold">
-              {formatCurrencyFull(forecast.monthlyNetNewArr, currencySymbol)}
+              {formatCurrencyFull(forecast.monthlyNewArr, currencySymbol)}
             </span>
           </div>
         </div>
       </div>
 
-      {/* SECOND ROW: churn / expansion / efficiency */}
-      <div className="mt-4 grid gap-4 md:grid-cols-3">
+      {/* ROW 2: CHURN / EXPANSION / EFFICIENCY / PIPELINE */}
+      <div className="mt-4 grid gap-4 md:grid-cols-4">
         <div className="rounded-xl bg-slate-800/60 p-3">
           <div className="text-[11px] text-slate-300">Churned ARR / year</div>
           <div className="mt-1 text-base font-semibold">
@@ -100,6 +98,19 @@ export default function ResultsPanel({
         </div>
 
         <div className="rounded-xl bg-slate-800/60 p-3">
+          <div className="text-[11px] text-slate-300">Net new ARR / month</div>
+          <div className="mt-1 text-base font-semibold">
+            {formatCurrencyFull(forecast.monthlyNetNewArr, currencySymbol)}
+          </div>
+          <div className="mt-2 text-[11px] text-slate-300">
+            Gross new ARR / month:{" "}
+            <span className="font-semibold">
+              {formatCurrencyFull(forecast.monthlyNewArr, currencySymbol)}
+            </span>
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-slate-800/60 p-3">
           <div className="text-[11px] text-slate-300">CAC Payback</div>
           <div className="mt-1 text-base font-semibold">
             {efficiency.cacPaybackMonths
@@ -109,9 +120,7 @@ export default function ResultsPanel({
           <div className="mt-2 text-[11px] text-slate-300">
             LTV:CAC:{" "}
             <span className="font-semibold">
-              {efficiency.ltvToCac
-                ? efficiency.ltvToCac.toFixed(2)
-                : "—"}
+              {efficiency.ltvToCac ? efficiency.ltvToCac.toFixed(2) : "—"}
             </span>
           </div>
         </div>
@@ -130,6 +139,42 @@ export default function ResultsPanel({
                 ? `${efficiency.pipelineCoverageActual.toFixed(2)}×`
                 : "—"}
             </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ROW 3: FUNNEL THROUGHPUT */}
+      <div className="mt-4">
+        <div className="mb-2 text-xs font-semibold text-slate-100">
+          Funnel Throughput (per month)
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="rounded-xl bg-slate-800/50 p-3">
+            <div className="text-[11px] text-slate-300">MQLs</div>
+            <div className="mt-1 text-base font-semibold">
+              {Math.round(funnel.mqls).toLocaleString("en-US")}
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-slate-800/50 p-3">
+            <div className="text-[11px] text-slate-300">SQLs</div>
+            <div className="mt-1 text-base font-semibold">
+              {Math.round(funnel.sqls).toLocaleString("en-US")}
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-slate-800/50 p-3">
+            <div className="text-[11px] text-slate-300">Opportunities</div>
+            <div className="mt-1 text-base font-semibold">
+              {Math.round(funnel.opportunities).toLocaleString("en-US")}
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-slate-800/50 p-3">
+            <div className="text-[11px] text-slate-300">Wins</div>
+            <div className="mt-1 text-base font-semibold">
+              {Math.round(funnel.wins).toLocaleString("en-US")}
+            </div>
           </div>
         </div>
       </div>
@@ -162,9 +207,7 @@ export default function ResultsPanel({
                   {rec.severity}
                 </span>
               </div>
-              <p className="mt-1 text-[11px] text-slate-200">
-                {rec.message}
-              </p>
+              <p className="mt-1 text-[11px] text-slate-200">{rec.message}</p>
             </div>
           ))}
         </div>
