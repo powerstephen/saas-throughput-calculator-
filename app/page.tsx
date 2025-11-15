@@ -221,7 +221,8 @@ export default function Page() {
                 onChange={(v) =>
                   setSalesBenchmarks({
                     ...salesBenchmarks,
-                    proposalToWin: v }),
+                    proposalToWin: v,
+                  })
                 }
               />
               <NumberInput
@@ -270,7 +271,7 @@ export default function Page() {
                 label="Gross Margin target"
                 suffix="%"
                 value={csBenchmarks.grossMargin}
-                onChange {(v) =>
+                onChange={(v) =>
                   setCsBenchmarks({ ...csBenchmarks, grossMargin: v })
                 }
               />
@@ -481,4 +482,3 @@ export default function Page() {
     </main>
   );
 }
-
