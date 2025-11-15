@@ -66,12 +66,7 @@ export type CalculatorResult = {
   }[];
 };
 
-// ---------- helper formatting (internal only) ----------
-
-function safeNumber(v: number | null | undefined): number {
-  if (v === null || v === undefined || isNaN(v)) return 0;
-  return v;
-}
+// ---------- helpers ----------
 
 function annualisedChurnFromMonthly(monthlyChurnPct: number): number {
   const m = monthlyChurnPct / 100;
@@ -238,9 +233,11 @@ export function calculateAll(
   const formatCurrency = (value: number): string => {
     if (!Number.isFinite(value)) return "-";
     if (Math.abs(value) >= 1_000_000) {
-      return `€${(value / 1_000_000).toFixed(1)}M`;
+      // 3 decimal places for millions, e.g. 2.545M
+      return `€${(value / 1_000_000).toFixed(3)}M`;
     }
     if (Math.abs(value) >= 1_000) {
+      // keep 1 decimal place for thousands
       return `€${(value / 1_000).toFixed(1)}k`;
     }
     return `€${value.toFixed(0)}`;
