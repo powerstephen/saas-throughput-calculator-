@@ -22,7 +22,8 @@ export default function ResultsPanel({
   timeframeWeeks,
   currencySymbol,
 }: Props) {
-  const { forecast, efficiency, funnel, recommendations } = result;
+  const { forecast, efficiency, funnel, priorities, otherFindings, recommendations } =
+    result;
 
   const months = timeframeWeeks / 4.345; // rough conversion to months
   const projectedArrInTimeframe =
@@ -32,11 +33,19 @@ export default function ResultsPanel({
   // ARR run rate based on current ARR + 12x net new ARR
   const arrRunRate = currentArr + forecast.monthlyNetNewArr * 12;
 
-  // Split recommendations into top 2 priorities + others
-  const priority1 = recommendations[0];
-  const priority2 = recommendations[1];
-  const otherFindings =
-    recommendations.length > 2 ? recommendations.slice(2) : [];
+  // Use priorities if present, otherwise fall back to first two recommendations
+  const priorityList =
+    priorities && priorities.length > 0
+      ? priorities
+      : recommendations.slice(0, 2);
+
+  const priority1 = priorityList[0];
+  const priority2 = priorityList[1];
+
+  const other =
+    otherFindings && otherFindings.length > 0
+      ? otherFindings
+      : recommendations.slice(priorityList.length);
 
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-slate-50 shadow-soft">
@@ -168,7 +177,7 @@ export default function ResultsPanel({
         <div className="mb-2 text-xs font-semibold text-slate-100">
           Funnel Throughput (per month)
         </div>
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-5">
           <div className="rounded-xl bg-slate-800/50 p-3">
             <div className="text-[11px] text-slate-300">MQLs</div>
             <div className="mt-1 text-base font-semibold">
@@ -187,6 +196,13 @@ export default function ResultsPanel({
             <div className="text-[11px] text-slate-300">Opportunities</div>
             <div className="mt-1 text-base font-semibold">
               {Math.round(funnel.opportunities).toLocaleString("en-US")}
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-slate-800/50 p-3">
+            <div className="text-[11px] text-slate-300">Proposals</div>
+            <div className="mt-1 text-base font-semibold">
+              {Math.round(funnel.proposals).toLocaleString("en-US")}
             </div>
           </div>
 
@@ -258,14 +274,14 @@ export default function ResultsPanel({
       )}
 
       {/* ROW 5: OTHER FINDINGS */}
-      {otherFindings.length > 0 && (
+      {other && other.length > 0 && (
         <div className="mt-4 rounded-xl bg-slate-800/50 p-3">
           <div className="mb-2 text-xs font-semibold text-slate-100">
             Other Findings
           </div>
 
           <div className="space-y-2">
-            {otherFindings.map((rec, idx) => (
+            {other.map((rec, idx) => (
               <div
                 key={idx}
                 className="rounded-lg border border-slate-700 bg-slate-900/60 p-2"
