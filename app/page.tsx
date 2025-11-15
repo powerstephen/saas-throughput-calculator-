@@ -104,7 +104,7 @@ export default function Page() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       {/* HEADER – logo left, text centered, button right */}
-      <header className="mb-8 border-b border-slate-200 pb-6">
+      <header className="mb-8 border-b border-slate-200 pb-4">
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between">
           {/* LEFT: Logo (bigger, transparent) */}
           <div className="flex items-center justify-start sm:w-[200px]">
@@ -142,7 +142,7 @@ export default function Page() {
 
       {/* BENCHMARK DROPDOWN – dark, matches other boxes */}
       {showBenchmarkSettings && (
-        <section className="mb-6 rounded-2xl border border-slate-800 bg-slate-900 p-4 text-slate-50 shadow-soft">
+        <section className="mb-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 text-slate-50 shadow-soft">
           <div className="mb-3">
             <h2 className="text-sm font-semibold text-slate-50">Benchmarks</h2>
             <p className="text-xs text-slate-300">
