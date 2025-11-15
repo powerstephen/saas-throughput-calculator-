@@ -22,13 +22,23 @@ export default function ResultsPanel({
   timeframeWeeks,
   currencySymbol,
 }: Props) {
-  const { forecast, efficiency, funnel, priorities, otherFindings, recommendations } =
-    result;
+  const {
+    forecast,
+    efficiency,
+    funnel,
+    priorities,
+    otherFindings,
+    recommendations,
+  } = result;
 
   const months = timeframeWeeks / 4.345; // rough conversion to months
   const projectedArrInTimeframe =
     currentArr + forecast.monthlyNetNewArr * months;
-  const arrGap = targetArr - projectedArrInTimeframe;
+
+  // Correct logic: positive diff = above target, negative = below target
+  const arrDiff = projectedArrInTimeframe - targetArr;
+  const isAboveTarget = arrDiff >= 0;
+  const absArrDiff = Math.abs(arrDiff);
 
   // ARR run rate based on current ARR + 12x net new ARR
   const arrRunRate = currentArr + forecast.monthlyNetNewArr * 12;
@@ -51,6 +61,7 @@ export default function ResultsPanel({
     <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-slate-50 shadow-soft">
       {/* ROW 1: ARR SUMMARY */}
       <div className="grid gap-4 md:grid-cols-4">
+        {/* Current ARR */}
         <div className="rounded-xl bg-slate-800/70 p-3">
           <div className="text-[11px] text-slate-300">Current ARR</div>
           <div className="mt-1 text-lg font-bold">
@@ -58,6 +69,7 @@ export default function ResultsPanel({
           </div>
         </div>
 
+        {/* ARR Target */}
         <div className="rounded-xl bg-slate-800/70 p-3">
           <div className="text-[11px] text-slate-300">ARR Target</div>
           <div className="mt-1 text-lg font-bold">
@@ -68,6 +80,7 @@ export default function ResultsPanel({
           </div>
         </div>
 
+        {/* Projected ARR in timeframe */}
         <div className="rounded-xl bg-sky-800/80 p-3">
           <div className="text-[11px] text-slate-100">
             Projected ARR in timeframe
@@ -76,26 +89,24 @@ export default function ResultsPanel({
             {formatCurrencyFull(projectedArrInTimeframe, currencySymbol)}
           </div>
           <div className="mt-1 text-[11px] text-slate-100">
-            vs target:{" "}
-            <span className="font-semibold">
-              {arrGap >= 0 ? "+" : "-"}
-              {formatCurrencyFull(Math.abs(arrGap), currencySymbol)}
-            </span>
+            If current net new ARR and churn/expansion trends hold.
           </div>
         </div>
 
+        {/* Gap / surplus vs target */}
         <div className="rounded-xl bg-slate-800/70 p-3">
           <div className="text-[11px] text-slate-300">
-            New ARR / year (new business)
+            {isAboveTarget ? "Ahead of ARR target" : "Gap to ARR target"}
           </div>
           <div className="mt-1 text-lg font-bold">
-            {formatCurrencyFull(funnel.newArrAnnual, currencySymbol)}
+            {formatCurrencyFull(absArrDiff, currencySymbol)}
           </div>
           <div className="mt-1 text-[11px] text-slate-400">
-            Monthly new ARR:{" "}
+            You are currently{" "}
             <span className="font-semibold">
-              {formatCurrencyFull(forecast.monthlyNewArr, currencySymbol)}
-            </span>
+              {isAboveTarget ? "above" : "below"}
+            </span>{" "}
+            your ARR target for this timeframe.
           </div>
         </div>
       </div>
