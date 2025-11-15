@@ -4,6 +4,7 @@ type Props = {
   onChange: (v: number) => void;
   benchmark: number;
   mode: "percent" | "currency";
+  currencySymbol?: string;
 };
 
 export default function MetricInputWithBenchmark({
@@ -12,8 +13,9 @@ export default function MetricInputWithBenchmark({
   onChange,
   benchmark,
   mode,
+  currencySymbol = "€",
 }: Props) {
-  const suffix = mode === "percent" ? "%" : "€";
+  const suffix = mode === "percent" ? "%" : currencySymbol;
 
   return (
     <div className="flex flex-col space-y-1">
@@ -37,7 +39,9 @@ export default function MetricInputWithBenchmark({
       <div className="text-[11px] text-slate-400">
         Benchmark:{" "}
         <span className="font-semibold text-slate-300">
-          {benchmark}
+          {benchmark.toLocaleString("en-US", {
+            maximumFractionDigits: mode === "currency" ? 0 : 2,
+          })}
           {suffix}
         </span>
       </div>
