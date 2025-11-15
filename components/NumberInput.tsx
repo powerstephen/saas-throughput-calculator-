@@ -6,6 +6,8 @@ type Props = {
   onChange: (v: number) => void;
   suffix?: string;
   step?: number;
+  min?: number;
+  max?: number;
 };
 
 export default function NumberInput({
@@ -14,6 +16,8 @@ export default function NumberInput({
   onChange,
   suffix,
   step = 1,
+  min,
+  max,
 }: Props) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
@@ -32,6 +36,8 @@ export default function NumberInput({
           type="number"
           value={value}
           step={step}
+          min={min}
+          max={max}
           onChange={handleChange}
           className="w-full bg-transparent text-slate-100 font-bold outline-none"
         />
